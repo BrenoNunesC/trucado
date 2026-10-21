@@ -314,5 +314,6 @@ describe('Determinismo', () => {
         expect(r.ante).toBeGreaterThanOrEqual(1);
       }
     }
-  });
+    // 30 runs completas levam ~4 s; com a máquina ocupada passam do limite padrão de 5 s
+  }, 30_000);
 });
