@@ -6,7 +6,10 @@ do Balatro.
 
 ## 1. Arquitetura
 
-**Stack:** TypeScript + Vite + React, testes com Vitest.
+**Stack:** TypeScript + Vite + React, testes com Vitest. Distribuído como programa de Windows com
+Electron: `electron/main.cjs` abre uma janela sem menu que carrega o build do Vite (`dist/`) do disco,
+com `contextIsolation`, `sandbox` e sem Node na página. As fontes vêm do `@fontsource` (embutidas no
+build), então o jogo roda offline. `npm run dist` gera o instalador NSIS e a versão portátil.
 
 **Por que React (e não Canvas/PixiJS):** o jogo é dominado por cartas, botões,
 tooltips, modais e texto. O DOM resolve isso com acessibilidade (foco, leitor de

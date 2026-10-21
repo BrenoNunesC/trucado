@@ -4,23 +4,40 @@ Roguelike de deckbuilding no estilo **Balatro**, construído sobre as regras do 
 Você enfrenta adversários ("Blinds") cada vez mais difíceis, precisa bater uma meta de pontos
 com poucas mãos, ganha dinheiro, compra Coringas na loja e tenta chegar ao fim do Ante 8.
 
-Roda 100% no navegador, sem backend. Interface em português do Brasil.
+Jogo de computador para Windows: abre na própria janela, funciona offline e não precisa de
+navegador nem de internet. Interface em português do Brasil.
 
-## Como rodar
+## Instalar e jogar
+
+O `npm run dist` (veja Desenvolvimento) gera dois executáveis em `release/`:
+
+| Arquivo | Para quê |
+| --- | --- |
+| `Trucado-Instalador-0.1.0.exe` | instala no computador, com atalho na área de trabalho e no menu Iniciar |
+| `Trucado-0.1.0-portatil.exe` | roda direto, sem instalar (dá para levar num pendrive) |
+
+O Windows pode mostrar o aviso "O Windows protegeu o computador" porque o executável não tem
+assinatura digital: clique em **Mais informações → Executar assim mesmo**.
+
+`F11` alterna a tela cheia. O progresso (run em andamento, recordes, coleção) fica salvo no
+computador, na pasta de dados do Trucado.
+
+## Desenvolvimento
 
 Precisa de Node.js 20+.
 
 ```bash
 npm install
-npm run dev        # abre em http://localhost:5173
+npm run app        # compila e abre o jogo numa janela
+npm run dist       # gera o instalador e a versão portátil em release/
 ```
 
 Outros comandos:
 
 | Comando | O que faz |
 | --- | --- |
-| `npm run build` | typecheck + build de produção em `dist/` (caminhos relativos: sirva a pasta em qualquer host estático) |
-| `npm run preview` | serve o build de produção localmente |
+| `npm run dev` | servidor de desenvolvimento com recarga automática (abre em http://localhost:5173) |
+| `npm run build` | typecheck + build do jogo em `dist/` (é o que a janela carrega) |
 | `npm test` | testes unitários (Vitest) |
 | `npm run typecheck` | checagem de tipos |
 | `npm run lint` | ESLint |
@@ -145,6 +162,7 @@ src/
   ui/       React: telas, componentes, store, animações e efeitos
   audio/    sons sintetizados com WebAudio
 tests/      Vitest
+electron/   janela do jogo (main.cjs) e ícone
 scripts/    simulate.ts
 ```
 
@@ -152,5 +170,6 @@ Arquitetura e decisões de design: [DESIGN.md](DESIGN.md).
 
 ## Salvamento
 
-Run em andamento, configurações, recordes, Coringas descobertos e stakes vencidas ficam no
-`localStorage` do navegador. Sem armazenamento disponível o jogo funciona, só não salva.
+Run em andamento, configurações, recordes, Coringas descobertos e stakes vencidas ficam salvos na pasta
+de dados do Trucado no computador (o `localStorage` da janela do jogo). Sem armazenamento disponível o
+jogo funciona, só não salva.

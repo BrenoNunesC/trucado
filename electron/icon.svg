@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Ícone do Trucado: carta creme com o Zap (♣) e o copo americano, sobre o feltro verde de boteco -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="#1c3a2a" />
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="none" stroke="#2e6a4a" stroke-width="12" />
+  <!-- sombra chapada e carta -->
+  <rect x="124" y="92" width="264" height="352" rx="32" fill="#0c1a12" transform="rotate(-8 256 268)" opacity="0.6" />
+  <g transform="rotate(-8 256 256)">
+    <rect x="116" y="76" width="264" height="352" rx="32" fill="#f3efe6" stroke="#d8d0c0" stroke-width="8" />
+    <text x="150" y="150" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="64" fill="#1b1b26">4</text>
+    <!-- paus grande -->
+    <g fill="#1b1b26">
+      <circle cx="248" cy="226" r="48" />
+      <circle cx="198" cy="296" r="48" />
+      <circle cx="298" cy="296" r="48" />
+      <path d="M232 290 L264 290 L284 380 L212 380Z" />
+    </g>
+    <!-- selo de manilha -->
+    <rect x="272" y="104" width="84" height="40" rx="10" fill="#f3b958" />
+    <text x="314" y="133" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="26" fill="#3a2400">ZAP</text>
+  </g>
+  <!-- copo americano com cerveja -->
+  <g transform="translate(330 288)">
+    <path d="M0 0 H120 L106 160 H14Z" fill="#000" opacity="0.35" transform="translate(8 10)" />
+    <path d="M0 0 H120 L106 160 H14Z" fill="#fda200" />
+    <path d="M0 0 H120 L116 34 H4Z" fill="#fff6e0" />
+    <path d="M24 40 L30 156 M48 40 L50 158 M72 40 L70 158 M96 40 L90 156" stroke="#fff" stroke-opacity="0.35" stroke-width="5" />
+    <path d="M0 0 H120 L106 160 H14Z" fill="none" stroke="#fff" stroke-opacity="0.7" stroke-width="6" />
+  </g>
+</svg>
