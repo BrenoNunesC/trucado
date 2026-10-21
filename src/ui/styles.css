@@ -25,11 +25,12 @@
   --black-suit: #1b1b26;
   --cw: 88px;
   --radius: 12px;
-  --font-display: 'Pixelify Sans', 'Arial Narrow', system-ui, sans-serif;
-  --font-title: 'Pixelify Sans', 'Arial Narrow', system-ui, sans-serif;
-  --font-label: 'Pixelify Sans', 'Arial Narrow', system-ui, sans-serif;
+  /* títulos e números grandes: condensada e encorpada; todo o resto: Barlow, fácil de ler */
+  --font-display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --font-title: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --font-label: 'Barlow', system-ui, sans-serif;
   --font-body: 'Barlow', system-ui, sans-serif;
-  --font-mono: 'Pixelify Sans', ui-monospace, monospace;
+  --font-mono: 'Barlow', system-ui, sans-serif;
   color-scheme: dark;
 }
 
@@ -2466,7 +2467,7 @@ h3.rarity-raro,
   letter-spacing: 0.6em;
 }
 .logo-sub {
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   font-size: clamp(1rem, 2.6vw, 1.3rem);
   color: var(--b-text);
   letter-spacing: 0.06em;
@@ -2528,7 +2529,7 @@ h3.rarity-raro,
   --boss: var(--b-gold);
 }
 .blind-name {
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   font-size: 1.1rem;
   color: #fff;
   background: var(--boss);
@@ -2549,7 +2550,7 @@ h3.rarity-raro,
 }
 .blind-target b,
 .bc-target b {
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   font-size: 1.6rem;
   color: var(--b-red);
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
@@ -2567,14 +2568,15 @@ h3.rarity-raro,
 .hand-cat {
   font-family: var(--font-label);
   color: var(--b-muted);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 .hand-cat b {
   color: #fff;
   font-size: 1rem;
 }
 .round-score .value {
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   font-size: 1.9rem;
   color: #fff;
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
@@ -2590,7 +2592,7 @@ h3.rarity-raro,
 /* Fichas × Mult: as duas caixas grandes */
 .chips-box,
 .mult-box {
-  font-family: var(--font-label) !important;
+  font-family: var(--font-display) !important;
   font-size: 1.7rem !important;
   border-radius: 8px !important;
   color: #fff !important;
@@ -2606,15 +2608,15 @@ h3.rarity-raro,
 }
 .times {
   color: var(--b-red);
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   font-size: 1.4rem;
 }
 .hand-total {
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   color: #fff;
 }
 .counter b {
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   font-size: 1.7rem;
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
 }
@@ -2635,7 +2637,8 @@ h3.rarity-raro,
 }
 .row-label {
   font-family: var(--font-label);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 700;
   color: var(--b-muted);
   letter-spacing: 0.04em;
 }
@@ -2658,7 +2661,7 @@ h3.rarity-raro,
   background: #4f6367;
   color: #fff;
   font-family: var(--font-label);
-  font-weight: 400;
+  font-weight: 700;
   letter-spacing: 0.02em;
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
   box-shadow: 0 4px 0 #2e3b3d;
@@ -2746,7 +2749,9 @@ h3.rarity-raro,
 .joker-name {
   color: #fff;
   font-family: var(--font-label);
-  font-weight: 400;
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1.1;
 }
 .joker.rarity-incomum {
   border-color: #b8e8cf;
@@ -2781,7 +2786,9 @@ h3.rarity-raro,
   border-color: var(--b-red);
 }
 .cons-name {
-  font-size: 8.5px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.1;
   font-family: var(--font-label);
 }
 .slot.empty.small {
@@ -2805,7 +2812,8 @@ h3.rarity-raro,
 .corner b,
 .face,
 .back-pattern {
-  font-family: var(--font-label);
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 .card-back .card-inner {
   background:
@@ -2919,14 +2927,15 @@ h3.rarity-raro,
 .opp-tag {
   font-family: var(--font-label);
   color: #f3e0c0;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 .manilha-label {
   color: #f3e0c0;
   font-family: var(--font-label);
 }
 .manilha-label b {
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   color: var(--b-gold);
 }
 .round {
@@ -2968,7 +2977,7 @@ h3.rarity-raro,
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
 }
 .bet-level b {
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   color: #fff;
 }
 .bet-level.level-1,
@@ -2990,7 +2999,7 @@ h3.rarity-raro,
 
 /* adversário */
 .opp-name {
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   color: #fff;
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
 }
@@ -2998,7 +3007,8 @@ h3.rarity-raro,
   background: #fff;
   color: #2b2b38;
   font-family: var(--font-label);
-  font-size: 0.9rem;
+  font-size: 1rem;
+  font-weight: 600;
   border-radius: 10px;
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35);
 }
@@ -3024,7 +3034,7 @@ h3.rarity-raro,
 /* log da mão */
 .hand-log {
   font-family: var(--font-label);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   line-height: 1.3;
   color: var(--b-text);
   text-shadow: none;
@@ -3051,6 +3061,7 @@ h3.rarity-raro,
 .hint {
   color: #fff;
   font-family: var(--font-label);
+  font-weight: 600;
 }
 .hint.shout {
   color: var(--b-red);
@@ -3101,7 +3112,7 @@ h3.rarity-raro,
   min-width: 0;
 }
 .bc-name {
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   font-size: 1.1rem;
   color: #fff;
 }
@@ -3110,7 +3121,7 @@ h3.rarity-raro,
 }
 .bc-bio {
   color: var(--b-muted);
-  font-size: 0.85rem;
+  font-size: 0.92rem;
   line-height: 1.3;
 }
 .bc-rule {
@@ -3150,7 +3161,7 @@ h3.rarity-raro,
 }
 .opp-choice b {
   font-family: var(--font-label);
-  font-weight: 400;
+  font-weight: 700;
   font-size: 1.05rem;
 }
 .opp-choice small {
@@ -3172,10 +3183,10 @@ h3.rarity-raro,
 }
 .boss-entry b {
   font-family: var(--font-label);
-  font-weight: 400;
+  font-weight: 700;
 }
 .boss-entry small {
-  font-size: 0.85rem;
+  font-size: 0.92rem;
   line-height: 1.3;
   color: var(--b-muted);
 }
@@ -3196,7 +3207,7 @@ h3.rarity-raro,
   background: rgba(10, 14, 15, 0.7);
 }
 .modal-head h2 {
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   color: #fff;
 }
 .modal-head {
@@ -3211,7 +3222,7 @@ h3.rarity-raro,
 .cashout h2 {
   color: var(--b-gold);
   text-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
-  font-family: var(--font-label);
+  font-family: var(--font-display);
 }
 .cashout-score {
   color: var(--b-muted);
@@ -3225,6 +3236,7 @@ h3.rarity-raro,
   border: 2px solid var(--b-edge);
   border-radius: 10px;
   font-family: var(--font-label);
+  font-weight: 600;
   box-shadow: 0 4px 0 var(--b-shadow);
 }
 .toast-good {

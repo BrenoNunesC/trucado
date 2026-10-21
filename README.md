@@ -13,8 +13,8 @@ O `npm run dist` (veja Desenvolvimento) gera dois executáveis em `release/`:
 
 | Arquivo | Para quê |
 | --- | --- |
-| `Trucado-Instalador-0.1.0.exe` | instala no computador, com atalho na área de trabalho e no menu Iniciar |
-| `Trucado-0.1.0-portatil.exe` | roda direto, sem instalar (dá para levar num pendrive) |
+| `Trucado-Instalador-0.1.1.exe` | instala no computador, com atalho na área de trabalho e no menu Iniciar |
+| `Trucado-0.1.1-portatil.exe` | roda direto, sem instalar (dá para levar num pendrive) |
 
 O Windows pode mostrar o aviso "O Windows protegeu o computador" porque o executável não tem
 assinatura digital: clique em **Mais informações → Executar assim mesmo**.

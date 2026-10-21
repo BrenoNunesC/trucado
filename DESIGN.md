@@ -191,8 +191,9 @@ começo não deve acabar a run.
   roupa, acessórios) sobre o fundo do bar. Novo personagem = nova entrada em `ART` com o mesmo id.
 - **Visual:** linguagem do Balatro aplicada a um boteco brasileiro. Fundo em espiral que gira bem devagar
   e muda de cor por Blind (Pequeno azul, Grande âmbar, Chefe na cor dele, loja cor de cerveja); painéis
-  arredondados com sombra sólida; fonte pixelada (Pixelify Sans); botões chapados; Fichas azul × Mult
-  vermelho. A mesa é de madeira de bar, com a 600, o copo americano, a porção de amendoim e tampinhas
+  arredondados com sombra sólida; botões chapados; Fichas azul × Mult vermelho. Fontes: Barlow nos textos
+  e botões, Barlow Condensed encorpada nos títulos e números grandes (a fonte pixelada saiu por ser difícil
+  de ler). A mesa é de madeira de bar, com a 600, o copo americano, a porção de amendoim e tampinhas
   (`TableDecor.tsx`, escondidos em telas pequenas). Fora a espiral, animação só onde comunica jogada.
 - **Elenco brasileiro:** fregueses do bar (Tonhão do Açougue, Dona Neide, Marcão Pagodeiro, Kátia do
   Cartório…) e chefes (Vó Benedita, Coronel Teodoro, Toninho do Cavaco, Rainha da Bateria…).

@@ -1,7 +1,7 @@
 {
   "name": "trucado",
   "productName": "Trucado",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Roguelike de deckbuilding no estilo Balatro sobre as regras do Truco Paulista, num boteco brasileiro.",
   "author": "Breno Nunes",
   "private": true,
@@ -22,7 +22,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@fontsource/barlow": "^5.3.0",
-    "@fontsource/pixelify-sans": "^5.3.0",
+    "@fontsource/barlow-condensed": "^5.3.0",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
