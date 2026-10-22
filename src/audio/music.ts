@@ -3,8 +3,8 @@
 // música nenhuma: a trilha é a sua.
 // Nome do arquivo no formato "Artista - Música.mp3" aparece bonitinho no tocador.
 //
-// As do YouTube tocam no player oficial embutido (IFrame API), que fica visível no canto enquanto
-// toca: é o que as regras do YouTube pedem (nada de baixar o áudio nem esconder o player).
+// As do YouTube tocam no player embutido (IFrame API), escondido: só o áudio importa. Nada é
+// baixado; o vídeo vem em streaming, pedido na menor qualidade.
 
 import { useSyncExternalStore } from 'react';
 import type { MusicLink } from '../ui/persist';
@@ -21,6 +21,7 @@ interface YTPlayer {
   playVideo(): void;
   pauseVideo(): void;
   setVolume(v: number): void;
+  setPlaybackQuality?(q: string): void;
 }
 interface YTNamespace {
   Player: new (
@@ -122,8 +123,8 @@ function youtube(): Promise<YTPlayer> {
     (YT) =>
       new Promise<YTPlayer>((resolve) => {
         const p: YTPlayer = new YT.Player(slot, {
-          width: 200,
-          height: 200,
+          width: 1,
+          height: 1,
           playerVars: { playsinline: 1, rel: 0 },
           events: {
             onReady: () => {
@@ -152,9 +153,6 @@ function youtube(): Promise<YTPlayer> {
 let onYouTubeError: (() => void) | null = null;
 export const setYouTubeErrorHandler = (fn: () => void) => (onYouTubeError = fn);
 
-const showPlayer = (v: boolean) => {
-  if (ytHost) ytHost.hidden = !v;
-};
 
 /** Id do vídeo num link do YouTube (watch, youtu.be, shorts, embed, music) ou o próprio id. */
 export function youtubeId(text: string): string | null {
@@ -214,8 +212,8 @@ function load(i: number) {
     youtube().then(
       (p) => {
         if (current()?.youtube !== id) return; // trocou de música enquanto carregava
-        showPlayer(true);
         p.setVolume(Math.round(state.volume * 100));
+        p.setPlaybackQuality?.('small'); // só o áudio interessa
         if (state.on) p.loadVideoById(id);
         else p.cueVideoById(id);
       },
@@ -227,10 +225,8 @@ function load(i: number) {
         onYouTubeError?.();
       },
     );
-    showPlayer(true);
   } else {
     ytPause();
-    showPlayer(false);
     const a = el();
     a.src = t.src;
     a.volume = state.volume;
@@ -264,7 +260,6 @@ export function prev(): void {
 export function stop(): void {
   audio?.pause();
   ytPause();
-  showPlayer(false);
   setPlaying(false);
 }
 
@@ -273,7 +268,6 @@ export function togglePlay(): void {
   if (!t) return;
   if (t.youtube) {
     if (!ytPlayer) return load(state.index);
-    showPlayer(true);
     void ytPlayer.then((p) => (state.playing ? p.pauseVideo() : p.playVideo()));
     return;
   }

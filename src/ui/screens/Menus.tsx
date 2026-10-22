@@ -272,7 +272,7 @@ function MusicSettings() {
       )}
       <h4>Do YouTube</h4>
       <p className="muted">
-        Cole o link de um vídeo (youtube.com, youtu.be ou YouTube Music). Toca no player do YouTube, que aparece no canto enquanto a música toca; precisa de internet.
+        Cole o link de um vídeo (youtube.com, youtu.be ou YouTube Music). Toca só o áudio; precisa de internet.
       </p>
       <YouTubeField />
       {st.musicLinks.length > 0 && (
