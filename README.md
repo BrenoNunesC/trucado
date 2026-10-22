@@ -251,7 +251,8 @@ tela do online e em `GET /ranking`. Cada jogo tem um id próprio, gerado na prim
 Offline, **Duplas contra a máquina** no menu põe você e um parceiro da IA contra uma dupla da IA.
 
 **Testar em casa:** `npm run server` e abra duas janelas do jogo (`npm run dev` e duas abas, por
-exemplo). O endereço padrão é `ws://localhost:8787`. Na mesma rede, o outro computador usa
+exemplo) e ponha `ws://localhost:8787` em Configurações → Online (o padrão é o servidor
+oficial, `wss://trucado-online.onrender.com`). Na mesma rede, o outro computador usa
 `ws://IP-do-seu-PC:8787` (nas configurações do jogo, em **Online**).
 
 **Publicar o servidor (para jogar pela internet):** o repositório já tem `render.yaml`. No

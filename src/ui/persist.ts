@@ -11,6 +11,11 @@ export interface MusicLink {
   title: string;
 }
 
+/** Servidor online oficial (Render). Para testar em casa: ws://localhost:8787 nas configurações. */
+export const DEFAULT_SERVER = 'wss://trucado-online.onrender.com';
+/** Padrão das versões antigas: quem nunca trocou passa a usar o servidor oficial. */
+const OLD_DEFAULT_SERVER = 'ws://localhost:8787';
+
 const KEY_RUN = 'trucado.run.v1';
 const KEY_PROFILE = 'trucado.profile.v1';
 const KEY_SETTINGS = 'trucado.settings.v1';
@@ -56,7 +61,7 @@ export const DEFAULT_SETTINGS: Settings = {
   freeOnze: true,
   freeFerro: true,
   // o build pode trazer o servidor oficial (VITE_TRUCADO_SERVER); sem ele, o servidor local
-  serverUrl: import.meta.env.VITE_TRUCADO_SERVER ?? 'ws://localhost:8787',
+  serverUrl: import.meta.env.VITE_TRUCADO_SERVER ?? DEFAULT_SERVER,
   onlineName: '',
   onlineAvatar: 'bene',
   playerId: '',
@@ -117,6 +122,10 @@ function write(key: string, value: unknown): void {
 
 export function loadSettings(): Settings {
   const s: Settings = { ...DEFAULT_SETTINGS, ...read<Partial<Settings>>(KEY_SETTINGS) };
+  if (s.serverUrl === OLD_DEFAULT_SERVER && !import.meta.env.VITE_TRUCADO_SERVER) {
+    s.serverUrl = DEFAULT_SERVER;
+    write(KEY_SETTINGS, s);
+  }
   if (!s.playerId) {
     s.playerId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `p-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
     write(KEY_SETTINGS, s);
