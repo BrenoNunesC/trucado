@@ -1,6 +1,9 @@
 # Gera o instalador do Windows e publica no GitHub Releases, com o latest.yml que a atualização
 # automática do jogo lê. Só roda quando você manda (Actions → "Publicar versão" → Run workflow),
 # depois de subir a versão no package.json.
+#
+# O electron-builder publicando sozinho cria um rascunho por alvo (instalador e portátil) ao
+# mesmo tempo; por isso ele só gera os arquivos e o rascunho único sai aqui, pelo gh.
 name: Publicar versão
 
 on:
@@ -19,6 +22,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run release
+      - run: npm run dist
+      - name: Rascunho da release
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          v=$(node -p "require('./package.json').version")
+          gh release create "v$v" --draft --title "Trucado $v" --notes "Escreva as novidades e publique." \
+            "release/Trucado-Instalador-$v.exe" "release/Trucado-Instalador-$v.exe.blockmap" \
+            "release/Trucado-$v-portatil.exe" release/latest.yml
