@@ -2,12 +2,45 @@
 
 import { useSyncExternalStore } from 'react';
 import { configureAudio } from '../audio/sfx';
+import type { CampView } from '../engine/campaign';
+import type { DuelRules, DuelView } from '../engine/duel';
+import type { DuplasView, SeatNo } from '../engine/duplas';
 import type { FreeMatch } from '../engine/free';
+import type { Side } from '../engine/truco';
+import type { RoomMode, Seat } from '../net/protocol';
+import type { LocalDuplas } from './screens/DuplasMode';
 import type { HandSummary, RunState } from '../engine/state';
+import { DECKS, STAKES } from '../data/decks';
+import { JOKERS } from '../data/jokers';
 import { configureFx } from './fx';
-import { loadProfile, loadRun, loadSettings, saveProfile, saveRun, saveSettings, type Profile, type Settings } from './persist';
+import { loadProfile, loadRun, loadSettings, saveOnlineRun, saveProfile, saveRun, saveSettings, type Profile, type Settings } from './persist';
 
-export type Screen = 'title' | 'newRun' | 'game' | 'free' | 'tutorial' | 'collection' | 'settings';
+export type Screen = 'title' | 'newRun' | 'game' | 'free' | 'duplas' | 'online' | 'tutorial' | 'collection' | 'settings';
+
+/** Sala online (net/client.ts mantém isto em dia com o servidor). */
+export interface OnlineState {
+  status: 'connecting' | 'lobby' | 'playing' | 'reconnecting' | 'closed';
+  mode?: RoomMode;
+  code?: string;
+  seat?: Side | number;
+  you?: Seat;
+  opp?: Seat | null;
+  view?: DuelView;
+  rematch?: { you: boolean; opp: boolean };
+  rules?: DuelRules;
+  error?: string;
+  /** Duplas: lugares girados como a mesa (0 = você, 2 = parceiro); null = vazio. */
+  seats?: (Seat | null)[];
+  host?: boolean;
+  locked?: boolean[];
+  dview?: DuplasView;
+  drematch?: { you: boolean; waiting: number };
+  /** Frase rápida de alguém da mesa (duplas). */
+  dspeech?: { text: string; key: number; seat: SeatNo } | null;
+  /** Campanha em dupla: o estado compartilhado e o baralho escolhido para a sua run. */
+  camp?: CampView;
+  campDeck?: string;
+}
 
 export type Modal =
   | { type: 'how' }
@@ -15,6 +48,7 @@ export type Modal =
   | { type: 'deck'; mode: 'consumable'; uid: string }
   | { type: 'deck'; mode: 'destroy' }
   | { type: 'menu' }
+  | { type: 'admin' }
   | null;
 
 export interface Speech {
@@ -40,6 +74,11 @@ export interface AppState {
   returnTo: Screen;
   run: RunState | null;
   free: FreeMatch | null;
+  online: OnlineState | null;
+  /** Duplas contra a máquina em andamento. */
+  duplas: LocalDuplas | null;
+  /** A tela de nova run está no modo campanha em dupla. */
+  newRunCoop: boolean;
   settings: Settings;
   profile: Profile;
   modal: Modal;
@@ -59,6 +98,9 @@ const state: AppState = {
   returnTo: 'title',
   run: loadRun(),
   free: null,
+  online: null,
+  duplas: null,
+  newRunCoop: false,
   settings: loadSettings(),
   profile: loadProfile(),
   modal: null,
@@ -71,6 +113,8 @@ const state: AppState = {
 };
 
 configureAudio(state.settings.volume, state.settings.muted);
+// administrador: o que entrou no jogo desde a última vez também já vem liberado
+if (state.profile.admin) queueMicrotask(unlockEverything);
 configureFx(state.settings.screenShake, state.settings.reducedMotion);
 
 let version = 0;
@@ -138,7 +182,9 @@ export function persistRun(): void {
     }
   }
   if (changed) saveProfile(state.profile);
-  saveRun(run.phase === 'over' ? null : run);
+  // a run da campanha online não pode tomar o lugar da sua run solo salva
+  if (run.coop?.online) saveOnlineRun(run.phase === 'over' ? null : run);
+  else saveRun(run.phase === 'over' ? null : run);
 }
 
 export function setSettings(patch: Partial<Settings>): void {
@@ -146,6 +192,29 @@ export function setSettings(patch: Partial<Settings>): void {
   saveSettings(state.settings);
   configureAudio(state.settings.volume, state.settings.muted);
   configureFx(state.settings.screenShake, state.settings.reducedMotion);
+  emit();
+}
+
+/**
+ * Modo administrador: todos os baralhos com todas as stakes vencidas (tudo liberado), todos os
+ * Coringas na Coleção e o tutorial dado como feito. Chamado ao ligar e a cada abertura do jogo,
+ * para o que for lançado depois já vir liberado também.
+ */
+export function unlockEverything(): void {
+  const p = state.profile;
+  p.admin = true;
+  p.tutorialDone = true;
+  for (const d of DECKS) p.stakesWon[d.id] = Math.max(p.stakesWon[d.id] ?? 0, STAKES.length);
+  for (const j of JOKERS) if (!p.discoveredJokers.includes(j.id)) p.discoveredJokers.push(j.id);
+  saveProfile(p);
+  emit();
+}
+
+export function setAdmin(on: boolean): void {
+  if (on) return unlockEverything();
+  // desligar só tira o painel; o que já foi desbloqueado continua
+  state.profile.admin = false;
+  saveProfile(state.profile);
   emit();
 }
 

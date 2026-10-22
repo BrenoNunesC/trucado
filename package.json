@@ -17,7 +17,12 @@
     "lint": "eslint .",
     "simulate": "vite-node scripts/simulate.ts",
     "app": "npm run build && electron .",
-    "dist": "npm run build && electron-builder --win"
+    "dist": "npm run build && electron-builder --win",
+    "retratos": "node scripts/retratos/gerar.mjs",
+    "retratos:prompts": "node scripts/retratos/gerar.mjs --prompts",
+    "server": "vite-node server/index.ts",
+    "server:build": "vite build --ssr server/index.ts --outDir server-dist --emptyOutDir",
+    "server:start": "node server-dist/index.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -26,6 +31,7 @@
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@types/ws": "^8.18.2",
     "@vitejs/plugin-react": "^6.1.2",
     "electron": "^45.0.0",
     "electron-builder": "^26.15.3",
@@ -74,5 +80,8 @@
     "portable": {
       "artifactName": "Trucado-${version}-portatil.${ext}"
     }
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
   }
 }

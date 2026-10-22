@@ -140,7 +140,8 @@ export function startBlind(run: RunState): BlindState {
   return blind;
 }
 
-function draw(run: RunState, blind: BlindState, n: number): Card[] {
+/** Compra `n` cartas do monte do Blind (embaralha o descarte quando o monte acaba). */
+export function draw(run: RunState, blind: BlindState, n: number): Card[] {
   const out: Card[] = [];
   for (let i = 0; i < n; i++) {
     if (blind.drawPile.length === 0) {
@@ -161,7 +162,20 @@ function pickRevealed(run: RunState, blind: BlindState): void {
   }
 }
 
+/**
+ * A campanha em dupla (engine/coop.ts) distribui de outro jeito: ela se registra aqui ao ser
+ * carregada, para este arquivo não depender dela.
+ */
+let coopDealer: ((run: RunState) => TrucoHand) | null = null;
+export function registerCoopDealer(fn: (run: RunState) => TrucoHand): void {
+  coopDealer = fn;
+}
+
 export function dealHand(run: RunState): TrucoHand {
+  if (run.coop) {
+    if (!coopDealer) throw new Error('Campanha em dupla sem o módulo coop carregado');
+    return coopDealer(run);
+  }
   const blind = run.blind!;
   blind.handsLeft -= 1;
   blind.handsPlayed += 1;

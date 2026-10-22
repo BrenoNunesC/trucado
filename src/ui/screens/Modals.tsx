@@ -2,9 +2,12 @@ import { useState, type ReactNode } from 'react';
 import { sfx } from '../../audio/sfx';
 import { BET_MULT } from '../../data/balance';
 import { CATEGORIES, categoryValues } from '../../data/categories';
-import { CONSUMABLE_BY_ID } from '../../data/consumables';
+import { CONSUMABLE_BY_ID, CONSUMABLES, KIND_NAME } from '../../data/consumables';
+import { JOKER_BY_ID, JOKERS, RARITY_NAME } from '../../data/jokers';
+import { computeCashout } from '../../engine/blind';
 import { compareCards, RANKS, SUITS, SUIT_NAME, SUIT_SYMBOL, type Card } from '../../engine/cards';
-import { applyConsumable } from '../../engine/inventory';
+import { addConsumable, addJoker, applyConsumable } from '../../engine/inventory';
+import type { JokerEdition } from '../../engine/state';
 import { destroyService } from '../../engine/shop';
 import { BET_NAMES } from '../../engine/truco';
 import { CardView } from '../components/CardView';
@@ -36,7 +39,134 @@ export function Modals() {
   if (m.type === 'how') return <HowModal />;
   if (m.type === 'deck') return <DeckModal modal={m} />;
   if (m.type === 'menu') return <MenuModal />;
+  if (m.type === 'admin') return <AdminModal />;
   return null;
+}
+
+/**
+ * Painel do administrador: dinheiro, qualquer Coringa ou consumível, mais mãos e vencer o Blind
+ * na hora. Só aparece com o modo administrador ligado (Configurações).
+ */
+function AdminModal() {
+  const s = useApp();
+  const run = s.run;
+  const [jokerId, setJokerId] = useState(JOKERS[0]?.id ?? '');
+  const [edition, setEdition] = useState<'' | JokerEdition>('');
+  const [consId, setConsId] = useState(CONSUMABLES[0]?.id ?? '');
+  const blind = run?.blind;
+  const online = !!run?.coop?.online;
+  const canWin = !!blind && !online && (blind.stage === 'playing' || blind.stage === 'onze' || blind.stage === 'handOver');
+  const done = (msg: string) => {
+    sfx('coin');
+    toast(msg, 'good');
+  };
+  return (
+    <ModalFrame title="Painel do administrador" onClose={close} wide>
+      {!run ? (
+        <p className="muted">Comece ou continue uma run para usar o painel. Tudo já está desbloqueado no seu perfil.</p>
+      ) : (
+        <div className="admin-panel">
+          <section>
+            <h3>Dinheiro</h3>
+            {[10, 50, 100].map((n) => (
+              <button key={n} className="btn" onClick={() => (act((r) => (r.money += n)), done(`+$${n}`))}>
+                +${n}
+              </button>
+            ))}
+          </section>
+          <section>
+            <h3>Coringa</h3>
+            <select value={jokerId} onChange={(e) => setJokerId(e.target.value)} aria-label="Coringa">
+              {[...JOKERS]
+                .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+                .map((j) => (
+                  <option key={j.id} value={j.id}>
+                    {j.name} ({RARITY_NAME[j.rarity]})
+                  </option>
+                ))}
+            </select>
+            <select value={edition} onChange={(e) => setEdition(e.target.value as '' | JokerEdition)} aria-label="Edição">
+              <option value="">Sem edição</option>
+              <option value="folheada">Folheada</option>
+              <option value="holografica">Holográfica</option>
+              <option value="fosforescente">Fosforescente</option>
+            </select>
+            <button
+              className="btn primary"
+              onClick={() => {
+                // o painel abre espaço se os slots estiverem cheios
+                act((r) => {
+                  if (r.jokers.length >= r.jokerSlots) r.jokerSlots += 1;
+                  addJoker(r, jokerId, edition || undefined, 0);
+                });
+                done(`${JOKER_BY_ID[jokerId].name} adicionado`);
+              }}
+            >
+              Adicionar
+            </button>
+          </section>
+          <section>
+            <h3>Consumível</h3>
+            <select value={consId} onChange={(e) => setConsId(e.target.value)} aria-label="Consumível">
+              {CONSUMABLES.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({KIND_NAME[c.kind]})
+                </option>
+              ))}
+            </select>
+            <button
+              className="btn primary"
+              onClick={() => {
+                act((r) => {
+                  if (r.consumables.length >= r.consumableSlots) r.consumableSlots += 1;
+                  addConsumable(r, CONSUMABLE_BY_ID[consId].kind, consId);
+                });
+                done(`${CONSUMABLE_BY_ID[consId].name} adicionado`);
+              }}
+            >
+              Adicionar
+            </button>
+          </section>
+          <section>
+            <h3>Run</h3>
+            <button className="btn" onClick={() => (act((r) => (r.jokerSlots += 1)), done('+1 slot de Coringa'))}>
+              +1 slot de Coringa
+            </button>
+            <button className="btn" onClick={() => (act((r) => (r.consumableSlots += 1)), done('+1 slot de consumível'))}>
+              +1 slot de consumível
+            </button>
+            {blind && (
+              <button className="btn" onClick={() => (act((r) => (r.blind!.handsLeft += 1)), done('+1 mão neste Blind'))}>
+                +1 mão neste Blind
+              </button>
+            )}
+            {blind && (
+              <button className="btn" onClick={() => (act((r) => (r.blind!.bluffsLeft += 1)), done('+1 blefe neste Blind'))}>
+                +1 blefe
+              </button>
+            )}
+            <button
+              className="btn danger"
+              disabled={!canWin}
+              title={online ? 'Na campanha online quem decide o Blind é o placar da dupla.' : undefined}
+              onClick={() => {
+                act((r) => {
+                  const b = r.blind!;
+                  b.score = Math.max(b.score, b.info.target);
+                  b.stage = 'won';
+                  b.cashout = computeCashout(r);
+                });
+                close();
+                done('Blind vencido');
+              }}
+            >
+              Vencer este Blind
+            </button>
+          </section>
+        </div>
+      )}
+    </ModalFrame>
+  );
 }
 
 export function HowModal() {
@@ -213,12 +343,18 @@ function DeckModal({ modal }: { modal: Extract<Modal, { type: 'deck' }> }) {
 }
 
 function MenuModal() {
+  const s = useApp();
   return (
     <ModalFrame title="Menu" onClose={close}>
       <div className="menu-list">
         <button className="btn" onClick={close}>
           Voltar ao jogo
         </button>
+        {s.profile.admin && (
+          <button className="btn primary" onClick={() => update((x) => (x.modal = { type: 'admin' }))}>
+            Painel do administrador
+          </button>
+        )}
         <button className="btn" onClick={() => update((s) => (s.modal = { type: 'how' }))}>
           Como funciona a pontuação
         </button>

@@ -3,7 +3,8 @@ import { sfx } from '../../audio/sfx';
 import { CATEGORY_BY_ID } from '../../data/categories';
 import { DECK_BY_ID, STAKES } from '../../data/decks';
 import { continueEndless } from '../../engine/run';
-import { saveRun } from '../persist';
+import { onlineLeave } from '../../net/client';
+import { loadRun, saveOnlineRun, saveRun } from '../persist';
 import { act, getState, update, updateProfile, useApp } from '../store';
 import { fmtNum } from '../text';
 
@@ -21,7 +22,19 @@ function record(won: boolean) {
     p.bestAnte = Math.max(p.bestAnte, won ? run.ante : run.ante - 1);
     p.bestHand = Math.max(p.bestHand, run.stats.bestHand);
   });
-  saveRun(run.phase === 'over' ? null : run);
+  // a campanha online tem a própria chave: não mexe na sua run solo salva
+  if (run.coop?.online) saveOnlineRun(null);
+  else saveRun(run.phase === 'over' ? null : run);
+}
+
+/** Sai da tela de fim de run; na campanha online, sai também da sala e devolve a run solo salva. */
+function leave(screen: 'newRun' | 'title') {
+  const online = !!getState().run?.coop?.online;
+  if (online) onlineLeave();
+  update((x) => {
+    x.run = online ? loadRun() : null;
+    x.screen = screen;
+  });
 }
 
 export function RunEnd() {
@@ -67,31 +80,15 @@ export function RunEnd() {
         </button>
       </p>
       <div className="end-actions">
-        {won && (
+        {won && !run.coop?.online && (
           <button className="btn primary big" onClick={() => act((r) => continueEndless(r))}>
             Continuar no modo infinito
           </button>
         )}
-        <button
-          className="btn primary"
-          onClick={() =>
-            update((x) => {
-              x.run = null;
-              x.screen = 'newRun';
-            })
-          }
-        >
+        <button className="btn primary" onClick={() => leave('newRun')}>
           Nova run
         </button>
-        <button
-          className="btn"
-          onClick={() =>
-            update((x) => {
-              x.run = null;
-              x.screen = 'title';
-            })
-          }
-        >
+        <button className="btn" onClick={() => leave('title')}>
           Menu principal
         </button>
       </div>

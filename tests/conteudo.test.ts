@@ -355,3 +355,11 @@ describe('Chefes, fregueses, Tags, vouchers e pacotes novos', () => {
     expect(enxuto.jokers.map((j) => j.id)).toEqual(['maoDeVaca']);
   });
 });
+
+describe('Retratos realistas', () => {
+  it('todo personagem com arte tem prompt em scripts/retratos/personagens.json', async () => {
+    const { personagens } = (await import('../scripts/retratos/personagens.json')).default as { personagens: { id: string }[] };
+    const comPrompt = new Set(personagens.map((p) => p.id));
+    expect(Object.keys(ART).filter((id) => !comPrompt.has(id))).toEqual([]);
+  });
+});

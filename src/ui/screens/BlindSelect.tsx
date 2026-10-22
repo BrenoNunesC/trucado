@@ -4,6 +4,7 @@ import { BOSS_BY_ID } from '../../data/bosses';
 import { opponentFor } from '../../data/opponents';
 import { TAG_BY_ID } from '../../data/tags';
 import { selectBlind, skipBlind } from '../../engine/run';
+import { campChoose } from '../campaignOnline';
 import { InventoryBar } from '../components/Items';
 import { Portrait } from '../components/Portrait';
 import { Tip } from '../components/Tip';
@@ -13,6 +14,8 @@ import { fmtNum } from '../text';
 export function BlindSelect() {
   const s = useApp();
   const run = s.run!;
+  const online = !!run.coop?.online;
+  const host = !!s.online?.camp?.host;
   return (
     <div className="blind-select">
       <InventoryBar />
@@ -49,23 +52,31 @@ export function BlindSelect() {
               </div>
               {b.status === 'skipped' && <div className="bc-stamp">PULADO</div>}
               {b.status === 'defeated' && <div className="bc-stamp good">VENCIDO</div>}
-              {current && (
+              {current && online && !host && (
+                <div className="bc-actions">
+                  <span className="hint muted online-spinner">Esperando {s.online?.camp?.partner.name ?? 'o anfitrião'} escolher…</span>
+                </div>
+              )}
+              {current && (!online || host) && (
                 <div className="bc-actions">
                   <button
                     className="btn primary big"
                     autoFocus
                     onClick={() => {
                       sfx('deal');
-                      act((r) => selectBlind(r));
+                      // online: quem decide é o anfitrião, e o servidor avisa os dois
+                      if (online) campChoose(false);
+                      else act((r) => selectBlind(r));
                     }}
                   >
                     Jogar
                   </button>
                   {tag && (
-                    <Tip content={tag.description}>
+                    <Tip content={online ? `${tag.description} (cada um ganha a sua)` : tag.description}>
                       <button
                         className="btn skip"
                         onClick={() => {
+                          if (online) return campChoose(true);
                           const msg = act((r) => skipBlind(r));
                           sfx('pack');
                           toast(`Pulou! Ganhou: ${msg}`, 'good');

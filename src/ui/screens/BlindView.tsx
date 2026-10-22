@@ -31,6 +31,8 @@ import { burst, shake } from '../fx';
 import { startScoreAnim } from '../scoreRunner';
 import { act, delay, getState, say, toast, update, useApp } from '../store';
 import { fmtNum } from '../text';
+import { CampaignBlindView } from './CampaignBlindView';
+import { CoopBlindView } from './CoopBlindView';
 
 
 function talk(ev: SpeechEvent) {
@@ -82,7 +84,7 @@ function afterAction(before: number) {
 }
 
 /** Fanfarra de fim de Blind, depois da animação de pontos. */
-function afterScore() {
+export function afterScore() {
   const b = getState().run?.blind;
   if (!b) return;
   if (b.stage === 'won') {
@@ -92,7 +94,14 @@ function afterScore() {
   } else if (b.stage === 'lost') sfx('gameOver');
 }
 
+/** Mesa do Blind: a de dois lados, ou a de quatro na campanha em dupla. */
 export function BlindView() {
+  const s = useApp();
+  if (s.run?.coop?.online) return <CampaignBlindView />;
+  return s.run?.coop ? <CoopBlindView /> : <SoloBlindView />;
+}
+
+function SoloBlindView() {
   const s = useApp();
   const run = s.run!;
   const blind = run.blind!;
@@ -353,11 +362,11 @@ export function BlindView() {
   );
 }
 
-function getModalOpen(): boolean {
+export function getModalOpen(): boolean {
   return !!document.querySelector('.modal-backdrop');
 }
 
-function SummaryLine() {
+export function SummaryLine() {
   const s = useApp();
   const sum = s.run!.blind!.lastSummary!;
   let text: string;
@@ -367,7 +376,7 @@ function SummaryLine() {
   return <span className={`hint ${sum.winner === 'player' ? 'good' : sum.winner === 'ai' ? 'bad' : ''}`}>{text}</span>;
 }
 
-function CashoutPanel({ onCollect }: { onCollect: () => void }) {
+export function CashoutPanel({ onCollect }: { onCollect: () => void }) {
   const s = useApp();
   const blind = s.run!.blind!;
   const lines = blind.cashout ?? [];

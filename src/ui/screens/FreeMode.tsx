@@ -14,7 +14,7 @@ import { shake } from '../fx';
 import { actFree, delay, say, update, updateProfile, useApp } from '../store';
 
 
-function Tentos({ n }: { n: number }) {
+export function Tentos({ n }: { n: number }) {
   return (
     <span className="tentos" aria-label={`${n} pontos`}>
       {Array.from({ length: FREE_TARGET }, (_, i) => (

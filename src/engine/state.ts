@@ -2,6 +2,7 @@
 
 import type { PersonalityId } from '../ai/opponent';
 import type { Card, Edition } from './cards';
+import type { DHand } from './duplas';
 import type { Rng } from './rng';
 import type { Side, TrucoHand } from './truco';
 
@@ -147,6 +148,32 @@ export interface BlindState {
   handFlags: { playerBetsAccepted: number; bluffedThisHand: boolean };
   ties: number;
   cashout?: CashoutLine[];
+  /** Campanha em dupla: a mão de verdade, com os quatro lugares (você é o 0). */
+  coop?: CoopBlind;
+}
+
+/** Quem senta em cada lugar da mesa em dupla. */
+export interface CoopSeat {
+  name: string;
+  /** id do personagem (roupa e mãos na mesa). */
+  avatar: string;
+  personality: PersonalityId;
+}
+
+export interface CoopBlind {
+  /** A mão em duplas. `hand` do Blind vira a projeção dela para você (para blefe e pontuação). */
+  dhand: DHand;
+  /** Lugares 0..3: você, adversário, parceiro, comparsa do adversário. */
+  seats: CoopSeat[];
+}
+
+/** Campanha em dupla: o seu parceiro (da IA). */
+export interface CoopInfo {
+  partner: CoopSeat;
+  /** Você na mesa (a roupa e as mãos que aparecem para os outros). */
+  you?: CoopSeat;
+  /** Campanha online: a sala e o seu lugar. A mesa e a sequência de Blinds são do servidor. */
+  online?: { code: string; seat: number; /** Última mão pontuada (Ante-Blind-mão). */ scored?: string };
 }
 
 export interface CashoutLine {
@@ -241,6 +268,8 @@ export interface RunState {
   bossesSeen: string[];
   /** Fim de run já contabilizado no perfil. */
   recorded?: boolean;
+  /** Campanha em dupla: os Blinds são jogados em duplas, você e o parceiro contra a máquina. */
+  coop?: CoopInfo;
   /** Mensagens curtas para a UI (toasts). Esvaziadas pela UI. */
   toasts: string[];
 }

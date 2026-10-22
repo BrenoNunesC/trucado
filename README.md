@@ -42,6 +42,9 @@ Outros comandos:
 | `npm run typecheck` | checagem de tipos |
 | `npm run lint` | ESLint |
 | `npm run simulate` | simula 1000 runs com uma IA jogadora e mostra a taxa de vitória por Ante |
+| `npm run server` | servidor online local (porta 8787), para testar o modo online |
+| `npm run server:build` / `server:start` | empacota o servidor em `server-dist/` e o roda (é o que a hospedagem usa) |
+| `npm run retratos` | gera os retratos realistas pela API de imagem (veja `scripts/retratos/`) |
 
 `npm run simulate -- --runs 300 --deck sujo --stake 3` muda quantidade, deck e stake.
 
@@ -153,17 +156,79 @@ Ganchos disponíveis (todos opcionais), definidos em `src/engine/jokerApi.ts`:
 rodadas vencidas (`ctx.roundsWon`), cangas, manilhas jogadas e o estado da run. Use `initialState`
 para contadores próprios e mostre-os na `description(self)`.
 
+## Campanha em dupla
+
+No menu, **Campanha em dupla** (ou **Em dupla** na tela de nova run): a mesma campanha, com
+baralho, Coringas, Tarôs, Gírias, Mandingas, vouchers, Tags, loja, Antes, Blinds e chefes, mas
+cada mão do Blind é jogada em duplas. Você e um parceiro (escolhido na hora) contra o adversário
+do Blind e um comparsa dele.
+
+- As suas três cartas e a vira saem do seu baralho, como na campanha solo; as dos outros saem da
+  casa. O blefe troca as suas cartas.
+- Quando a sua dupla leva a mão, a pontuação é sua: a mão é vista do seu lado (em cada rodada, a
+  sua carta contra a melhor carta adversária, com o resultado da dupla) e passa pela pontuação de
+  sempre. Por isso todos os Coringas, edições, selos, níveis de Jogada e vouchers funcionam igual.
+- Os chefes valem para a mesa inteira (vira rotativa, vira escondida, canga para o adversário,
+  limite de aposta etc.).
+- Quando o adversário pede truco, quem responde pela sua dupla é você.
+- Na Mão de Onze, você vê as cartas do parceiro antes de decidir.
+
+## Jogar online
+
+No menu, **Jogar online**. Um jogador cria a sala e manda o código de 4 letras; os outros entram
+com ele. Três tipos de sala, todos até 12:
+
+- **1 contra 1**: começa quando o segundo entra.
+- **Duplas 2 contra 2**: até quatro pessoas; cada um escolhe o lugar e o anfitrião começa. Os
+  lugares vazios viram IA.
+- **Dupla contra a máquina**: você e um amigo na mesma dupla contra duas IAs.
+- **Campanha em dupla**: a campanha inteira com um amigo. Antes, Blinds e chefes são da dupla
+  (o servidor sorteia a sequência); baralho, Coringas, Tarôs, dinheiro e loja são de cada um.
+  Cada um escolhe o próprio baralho na sala e o anfitrião escolhe a stake e decide jogar ou pular
+  cada Blind (pulando, cada um ganha a própria Tag). A dupla vence o Blind quando a soma das duas
+  pontuações chega à soma das duas metas; o próximo Blind começa quando os dois saem da loja. Se
+  o parceiro sair, a IA assume o lugar dele e só a sua meta conta dali em diante. A run online
+  fica salva à parte e nunca toma o lugar da sua run solo.
+
+Quem manda na partida é o servidor (`server/`): ele valida cada jogada e manda para cada jogador
+só a própria visão da mesa, então ninguém vê as cartas dos outros (nem as próprias na Mão de
+Ferro, que é às cegas). Se a conexão cair, o jogo volta sozinho para a sala; quem ficar mais de 1
+minuto e meio fora perde por abandono no 1 contra 1, e nas duplas a IA assume o lugar.
+
+Offline, **Duplas contra a máquina** no menu põe você e um parceiro da IA contra uma dupla da IA.
+
+**Testar em casa:** `npm run server` e abra duas janelas do jogo (`npm run dev` e duas abas, por
+exemplo). O endereço padrão é `ws://localhost:8787`. Na mesma rede, o outro computador usa
+`ws://IP-do-seu-PC:8787` (nas configurações do jogo, em **Online**).
+
+**Publicar o servidor (para jogar pela internet):** o repositório já tem `render.yaml`. No
+[Render](https://render.com), crie um *Blueprint* apontando para o repositório e ele sobe o
+serviço sozinho (plano grátis; ele dorme sem uso e leva alguns segundos para acordar). Depois:
+
+1. Copie o endereço do serviço (ex.: `https://trucado-online.onrender.com`) e troque `https` por
+   `wss`: `wss://trucado-online.onrender.com`.
+2. Cada jogador põe esse endereço em **Configurações → Online**, ou gere o jogo já com ele:
+   `VITE_TRUCADO_SERVER=wss://trucado-online.onrender.com npm run dist`.
+
+Qualquer hospedagem de Node.js com WebSocket serve (Fly.io, Railway, uma VPS): o build é
+`npm ci --include=dev && npm run server:build` e o início é `npm run server:start`, com a porta
+em `PORT`.
+
 ## Estrutura
 
 ```
 src/
-  engine/   regras puras (sem UI): cartas, RNG com seed, truco, pontuação, Blind, loja, run, modo livre
+  engine/   regras puras (sem UI): cartas, RNG com seed, truco, pontuação, Blind, loja, run, modo livre,
+            duel.ts (1 contra 1 online e a visão de cada jogador), duplas.ts (truco 2 contra 2),
+            coop.ts (campanha em dupla), campaign.ts (o que a campanha online compartilha)
+  net/      protocolo e cliente do modo online
   data/     tabelas: jokers/ (registro automático), chefes, tags, vouchers, consumíveis, pacotes,
             decks e stakes, falas, balance.ts (fórmulas de meta e preços)
   ai/       IA do adversário (heurística + Monte Carlo) e IA jogadora do simulador
   ui/       React: telas, componentes, store, animações e efeitos
   audio/    sons sintetizados com WebAudio
 tests/      Vitest
+server/     servidor online (salas, WebSocket)
 electron/   janela do jogo (main.cjs) e ícone
 scripts/    simulate.ts
 ```

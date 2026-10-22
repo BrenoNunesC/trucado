@@ -6,12 +6,49 @@ import { hideTip, TipLayer } from './components/Tip';
 import { BlindSelect } from './screens/BlindSelect';
 import { BlindView } from './screens/BlindView';
 import { FreeMode } from './screens/FreeMode';
+import { DuplasMode } from './screens/DuplasMode';
+import { OnlineMode } from './screens/OnlineMode';
 import { Collection, NewRunScreen, SettingsScreen, Title } from './screens/Menus';
 import { Modals } from './screens/Modals';
 import { RunEnd } from './screens/RunEnd';
 import { PackOverlay, Shop } from './screens/Shop';
 import { Tutorial } from './screens/Tutorial';
 import { setSettings, update, useApp } from './store';
+import { onlineLeave } from '../net/client';
+import { loadRun } from './persist';
+// a campanha online se registra para receber os estados do servidor
+import './campaignOnline';
+
+/** Campanha online: a sala, o parceiro e o botão de sair (que devolve a sua run solo salva). */
+function CampaignBar() {
+  const s = useApp();
+  const o = s.online;
+  const camp = o?.camp;
+  const leave = () => {
+    onlineLeave();
+    update((x) => {
+      x.run = loadRun();
+      x.screen = 'title';
+    });
+  };
+  return (
+    <div className="camp-bar" role="status">
+      <span>
+        Campanha em dupla · Sala <b>{o?.code ?? s.run?.coop?.online?.code}</b>
+      </span>
+      {camp && (
+        <span>
+          Parceiro: <b>{camp.partner.name}</b>
+          {camp.partner.bot ? ' (IA)' : !camp.partner.online ? ' (desconectado)' : ''}
+        </span>
+      )}
+      {o?.status === 'reconnecting' && <span className="online-off">Reconectando…</span>}
+      <button className="btn tiny" onClick={leave}>
+        Sair da sala
+      </button>
+    </div>
+  );
+}
 
 function GameScreen() {
   const s = useApp();
@@ -22,6 +59,7 @@ function GameScreen() {
     <div className="game-layout">
       <Sidebar />
       <main className="game-main">
+        {run.coop?.online && <CampaignBar />}
         {run.phase === 'select' && <BlindSelect />}
         {run.phase === 'blind' && run.blind && <BlindView />}
         {run.phase === 'shop' && run.shop && <Shop />}
@@ -67,6 +105,8 @@ export function App() {
         {s.screen === 'newRun' && <NewRunScreen />}
         {s.screen === 'game' && <GameScreen />}
         {s.screen === 'free' && <FreeMode />}
+        {s.screen === 'duplas' && <DuplasMode />}
+        {s.screen === 'online' && <OnlineMode />}
         {s.screen === 'tutorial' && <Tutorial />}
         {s.screen === 'collection' && <Collection />}
         {s.screen === 'settings' && <SettingsScreen />}

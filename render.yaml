@@ -1,0 +1,12 @@
+# Servidor online do Trucado no Render (https://render.com): New → Blueprint → este repositório.
+services:
+  - type: web
+    name: trucado-online
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run server:build
+    startCommand: npm run server:start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"

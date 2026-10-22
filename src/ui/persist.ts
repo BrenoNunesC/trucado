@@ -18,6 +18,11 @@ export interface Settings {
   campaignFerro: boolean;
   freeOnze: boolean;
   freeFerro: boolean;
+  /** Endereço do servidor online (ws:// ou wss://). */
+  serverUrl: string;
+  /** Nome e personagem usados nas salas online. */
+  onlineName: string;
+  onlineAvatar: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -31,6 +36,10 @@ export const DEFAULT_SETTINGS: Settings = {
   campaignFerro: false,
   freeOnze: true,
   freeFerro: true,
+  // o build pode trazer o servidor oficial (VITE_TRUCADO_SERVER); sem ele, o servidor local
+  serverUrl: import.meta.env.VITE_TRUCADO_SERVER ?? 'ws://localhost:8787',
+  onlineName: '',
+  onlineAvatar: 'bene',
 };
 
 export interface Profile {
@@ -44,6 +53,8 @@ export interface Profile {
   tutorialDone: boolean;
   freeWins: number;
   freeLosses: number;
+  /** Modo administrador: tudo desbloqueado e o painel do administrador no Menu. */
+  admin?: boolean;
 }
 
 export const DEFAULT_PROFILE: Profile = {
@@ -86,3 +97,14 @@ export function loadRun(): RunState | null {
   return r && r.version === 1 && r.phase !== 'over' ? r : null;
 }
 export const saveRun = (r: RunState | null) => write(KEY_RUN, r);
+
+/**
+ * A run da campanha online fica numa chave própria (nunca por cima da run solo) e só serve para
+ * voltar à mesma sala depois de recarregar a página.
+ */
+const KEY_ONLINE_RUN = 'trucado-online-run';
+export function loadOnlineRun(code: string): RunState | null {
+  const r = read<RunState>(KEY_ONLINE_RUN);
+  return r && r.coop?.online?.code === code ? r : null;
+}
+export const saveOnlineRun = (r: RunState | null) => write(KEY_ONLINE_RUN, r);

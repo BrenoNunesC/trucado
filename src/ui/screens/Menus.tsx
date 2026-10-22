@@ -5,6 +5,7 @@ import { sfx } from '../../audio/sfx';
 import { BOSSES } from '../../data/bosses';
 import { DECKS, STAKES } from '../../data/decks';
 import { JOKERS, RARITY_NAME } from '../../data/jokers';
+import { makeCoop } from '../../engine/coop';
 import { newRun } from '../../engine/run';
 import { randomSeedString } from '../../engine/rng';
 import { OPPONENTS } from '../../data/opponents';
@@ -12,7 +13,7 @@ import { JokerFace, JokerTip } from '../components/Items';
 import { Portrait } from '../components/Portrait';
 import { Tip } from '../components/Tip';
 import { saveRun } from '../persist';
-import { goSettings, setSettings, update, useApp, type Screen } from '../store';
+import { goSettings, setAdmin, setSettings, toast, update, useApp, type Screen } from '../store';
 import { fmtNum } from '../text';
 
 const go = (screen: Screen) =>
@@ -45,11 +46,20 @@ export function Title() {
             Continuar run <small>(Ante {s.run!.ante})</small>
           </button>
         )}
-        <button className={`btn ${canContinue ? '' : 'primary'} big`} onClick={() => go('newRun')}>
+        <button className={`btn ${canContinue ? '' : 'primary'} big`} onClick={() => update((x) => ((x.newRunCoop = false), (x.screen = 'newRun')))}>
           Nova run
+        </button>
+        <button className="btn" onClick={() => (sfx('click'), update((x) => ((x.newRunCoop = true), (x.screen = 'newRun'))))}>
+          Campanha em dupla
         </button>
         <button className="btn" onClick={() => go('free')}>
           Modo livre (até 12)
+        </button>
+        <button className="btn" onClick={() => go('duplas')}>
+          Duplas contra a máquina
+        </button>
+        <button className="btn" onClick={() => go('online')}>
+          Jogar online
         </button>
         <button className={`btn ${p.tutorialDone ? '' : 'glow'}`} onClick={() => go('tutorial')}>
           Tutorial
@@ -83,6 +93,8 @@ export function NewRunScreen() {
   const [deckId, setDeck] = useState('classico');
   const [stake, setStake] = useState(1);
   const [seed, setSeed] = useState(() => randomSeedString());
+  const [partner, setPartner] = useState('bene');
+  const coop = s.newRunCoop;
   const deckUnlocked = (unlockedBy?: string) => !unlockedBy || (p.stakesWon[unlockedBy] ?? 0) >= 1;
   const maxStake = Math.min(8, (p.stakesWon[deckId] ?? 0) + 1);
 
@@ -94,6 +106,7 @@ export function NewRunScreen() {
       stake: Math.min(stake, maxStake),
       options: { maoDeOnze: s.settings.campaignOnze, maoDeFerro: s.settings.campaignFerro },
     });
+    if (coop) makeCoop(run, partner, s.settings.onlineAvatar);
     saveRun(run);
     sfx('deal');
     update((x) => {
@@ -105,7 +118,40 @@ export function NewRunScreen() {
 
   return (
     <div className="new-run">
-      <h2 className="screen-title">Nova run</h2>
+      <h2 className="screen-title">{coop ? 'Campanha em dupla' : 'Nova run'}</h2>
+      <div className="mode-toggle" role="radiogroup" aria-label="Modo">
+        <button role="radio" aria-checked={!coop} className={`btn ${!coop ? 'primary' : ''}`} onClick={() => update((x) => (x.newRunCoop = false))}>
+          Sozinho
+        </button>
+        <button role="radio" aria-checked={coop} className={`btn ${coop ? 'primary' : ''}`} onClick={() => update((x) => (x.newRunCoop = true))}>
+          Em dupla
+        </button>
+      </div>
+      {coop && (
+        <>
+          <p className="muted">
+            Os Blinds são jogados em duplas: você e um parceiro contra o adversário do Blind e um comparsa dele. O baralho, os Coringas, os
+            Tarôs, o dinheiro e a loja são os seus; quando a dupla leva a mão, a pontuação é sua.
+          </p>
+          <h3>Seu parceiro</h3>
+          <div className="online-avatars duplas-partners">
+            {OPPONENTS.map((o) => (
+              <button
+                key={o.id}
+                className={`online-avatar ${partner === o.id ? 'selected' : ''}`}
+                aria-pressed={partner === o.id}
+                title={`${o.name}: ${o.bio}`}
+                onClick={() => (sfx('click'), setPartner(o.id))}
+              >
+                <Portrait id={o.id} size={52} title={o.name} />
+              </button>
+            ))}
+          </div>
+          <p className="muted">
+            Parceiro: <b>{OPPONENTS.find((o) => o.id === partner)?.name}</b>
+          </p>
+        </>
+      )}
       <h3>Baralho</h3>
       <div className="deck-choices">
         {DECKS.map((d) => {
@@ -224,6 +270,26 @@ export function SettingsScreen() {
         <Toggle label="Mão de Ferro na campanha" hint="Se faltar mais da metade da meta na última mão, ela é às cegas valendo Seis." value={st.campaignFerro} onChange={(v) => setSettings({ campaignFerro: v })} />
         <Toggle label="Mão de Onze no modo livre" value={st.freeOnze} onChange={(v) => setSettings({ freeOnze: v })} />
         <Toggle label="Mão de Ferro no modo livre" value={st.freeFerro} onChange={(v) => setSettings({ freeFerro: v })} />
+      </section>
+      <section>
+        <h3>Online</h3>
+        <label className="online-field">
+          <span>Endereço do servidor</span>
+          <input value={st.serverUrl} placeholder="wss://seu-servidor.onrender.com" onChange={(e) => setSettings({ serverUrl: e.target.value.trim() })} />
+        </label>
+        <p className="muted">As salas online valem as mesmas regras de Mão de Onze e de Ferro do modo livre (definidas por quem cria a sala).</p>
+      </section>
+      <section>
+        <h3>Administrador</h3>
+        <Toggle
+          label="Modo administrador"
+          hint="Libera todos os baralhos, stakes e Coringas e põe o Painel do administrador no Menu (Esc) durante a run: dinheiro, qualquer Coringa ou consumível, mais mãos e vencer o Blind."
+          value={!!s.profile.admin}
+          onChange={(v) => {
+            setAdmin(v);
+            toast(v ? 'Modo administrador ligado: tudo desbloqueado.' : 'Modo administrador desligado (o que foi liberado continua).', 'good');
+          }}
+        />
       </section>
       <button className="btn primary" onClick={() => update((x) => (x.screen = x.returnTo === 'settings' ? 'title' : x.returnTo))}>
         Voltar

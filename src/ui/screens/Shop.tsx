@@ -4,6 +4,7 @@ import { PACK_BY_ID } from '../../data/packs';
 import { VOUCHER_BY_ID } from '../../data/vouchers';
 import { pickFromPack, skipPack, buyItem, buyPack, buyVoucher, reroll, rerollCost } from '../../engine/shop';
 import { leaveShop, openQueuedPack } from '../../engine/run';
+import { campShopDone } from '../campaignOnline';
 import { CardView } from '../components/CardView';
 import { ConsumableFace, ConsumableTip, InventoryBar, JokerFace, JokerTip } from '../components/Items';
 import { Tip } from '../components/Tip';
@@ -20,21 +21,30 @@ export function Shop() {
   const run = s.run!;
   const shop = run.shop!;
   const rc = rerollCost(run);
+  const online = !!run.coop?.online;
+  const camp = s.online?.camp;
 
   return (
     <div className="shop">
       <InventoryBar />
       <div className="shop-body">
         <div className="shop-actions">
-          <button
-            className="btn primary big"
-            onClick={() => {
-              sfx('click');
-              act((r) => leaveShop(r));
-            }}
-          >
-            Próximo Blind ▶
-          </button>
+          {online ? (
+            // online: o próximo Blind começa quando os dois saírem da loja
+            <button className="btn primary big" disabled={camp?.shopDone.you} onClick={() => (sfx('click'), campShopDone())}>
+              {camp?.shopDone.you ? `Esperando ${camp.partner.name} sair da loja…` : camp?.shopDone.partner ? `Próximo Blind ▶ (${camp.partner.name} já está pronto)` : 'Próximo Blind ▶'}
+            </button>
+          ) : (
+            <button
+              className="btn primary big"
+              onClick={() => {
+                sfx('click');
+                act((r) => leaveShop(r));
+              }}
+            >
+              Próximo Blind ▶
+            </button>
+          )}
           <button className="btn reroll" disabled={run.money < rc} onClick={() => feedback(act((r) => reroll(r)))}>
             🎲 Rolar ${rc}
             {shop.freeRerolls > 0 && <small> ({shop.freeRerolls} grátis)</small>}

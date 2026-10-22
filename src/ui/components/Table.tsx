@@ -1,17 +1,18 @@
 // Mesa de truco: adversário, vira, rodadas e a mão do jogador.
 
+import { useEffect, useRef, useState } from 'react';
 import { manilhaFromVira, RANK_NAME, SUIT_NAME, type Card } from '../../engine/cards';
 import { BET_NAMES, betValue, isHidden, responder, type TrucoHand } from '../../engine/truco';
 import type { Speech } from '../store';
 import { CardView } from './CardView';
-import { Portrait } from './Portrait';
+import { OpponentSeat, type Gesture } from './OpponentSeat';
 import { TableDecor } from './TableDecor';
 import { Tip } from './Tip';
 
 export interface TableProps {
   hand: TrucoHand;
   opponentName: string;
-  /** id do personagem/chefe para o retrato. */
+  /** id do personagem/chefe (roupa e pele do adversário sentado). */
   portraitId: string;
   isBoss?: boolean;
   opponentTag?: string;
@@ -27,45 +28,62 @@ export interface TableProps {
 
 const sideLabel = { player: 'Você', ai: 'Adv.' } as const;
 
+/**
+ * Descobre o que o adversário acabou de fazer comparando a mão com o quadro anterior:
+ * uma carta a menos = jogou; um pedido de aposta dele = bateu na mesa; aceitou = batidinha;
+ * correu = largou as cartas.
+ */
+function useOpponentGesture(h: TrucoHand): { gesture: Gesture; key: number } {
+  const [state, setState] = useState<{ gesture: Gesture; key: number }>({ gesture: null, key: 0 });
+  const prev = useRef({ ai: h.hands.ai.length, bet: '', level: h.level });
+  useEffect(() => {
+    const p = prev.current;
+    const bet = h.pending ? `${h.pending.by}-${h.pending.level}` : '';
+    let g: Gesture = null;
+    if (h.result?.ranAway === 'ai') g = 'fold';
+    else if (bet && bet !== p.bet && h.pending!.by === 'ai') g = 'slam';
+    else if (h.hands.ai.length < p.ai) g = 'throw';
+    else if (!bet && p.bet.startsWith('player') && h.level > p.level) g = 'tap';
+    prev.current = { ai: h.hands.ai.length, bet, level: h.level };
+    // nova mão: as cartas voltam e o gesto anterior some
+    if (h.hands.ai.length > p.ai) setState((s) => ({ gesture: null, key: s.key + 1 }));
+    else if (g) setState((s) => ({ gesture: g, key: s.key + 1 }));
+  }, [h, h.hands.ai.length, h.pending, h.level, h.result]);
+  return state;
+}
+
 export function Table(p: TableProps) {
   const h = p.hand;
   const blindPlay = !!h.options.blindPlay;
   const visibleManilha = p.hideVira ? null : h.manilha;
   const pending = h.pending;
   const playerMustRespond = pending && responder(h) === 'player';
+  const gesture = useOpponentGesture(h);
 
   return (
     <div className={`table ${pending ? 'bet-pending' : ''}`}>
       <TableDecor />
       <div className="opp-zone">
+        <OpponentSeat
+          id={p.portraitId}
+          cards={h.hands.ai}
+          revealedId={p.revealedAi}
+          manilha={visibleManilha}
+          gesture={gesture.gesture}
+          gestureKey={gesture.key}
+          thinking={p.thinking}
+        />
         <div className="opp-avatar" aria-label={`Adversário: ${p.opponentName}`}>
-          <Portrait id={p.portraitId} boss={p.isBoss} size={84} className="opp-portrait" title={p.opponentName} />
           <span className="opp-name">{p.opponentName}</span>
           {p.opponentTag && <span className="opp-tag">{p.opponentTag}</span>}
-          {p.speech && (
-            <span className="speech" key={p.speech.key} role="status">
-              {p.speech.text}
-            </span>
-          )}
-          {p.thinking && !p.speech && <span className="speech thinking">…</span>}
+          {p.isBoss && <span className="opp-boss">Chefe</span>}
         </div>
-        <div className="opp-hand">
-          {h.hands.ai.map((c) => {
-            const peek = c.id === p.revealedAi;
-            return (
-              <CardView
-                key={c.id}
-                card={peek ? c : null}
-                back={!peek}
-                peek={peek}
-                manilha={visibleManilha}
-                small
-                tip={peek}
-                className="deal-in"
-              />
-            );
-          })}
-        </div>
+        {p.speech && (
+          <span className="speech" key={p.speech.key} role="status">
+            {p.speech.text}
+          </span>
+        )}
+        {p.thinking && !p.speech && <span className="speech thinking">…</span>}
       </div>
 
       <div className="mid-zone">
