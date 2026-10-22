@@ -4668,3 +4668,75 @@ h3.rarity-raro,
 .achievement small {
   color: var(--muted);
 }
+
+/* músicas do YouTube: o player oficial fica visível acima do tocador enquanto toca */
+.yt-host {
+  position: fixed;
+  left: 12px;
+  bottom: 60px;
+  z-index: 56;
+  width: 200px;
+  height: 200px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid var(--panel-line);
+  background: #000;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+.yt-host[hidden] {
+  display: none;
+}
+.yt-host iframe {
+  display: block;
+  width: 200px;
+  height: 200px;
+}
+/* com o tocador aberto, o player sobe para não cobrir os botões */
+body:has(.music-widget.open) .yt-host {
+  left: calc(min(260px, 100vw - 80px) + 70px);
+  bottom: 12px;
+}
+.yt-field {
+  display: flex;
+  gap: 6px;
+}
+.yt-field input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--panel-line);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--ink);
+  font: inherit;
+}
+.yt-badge {
+  color: #ff3b30;
+  margin-right: 4px;
+  font-size: 0.8em;
+}
+.yt-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: grid;
+  gap: 4px;
+}
+.yt-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.link-btn {
+  background: none;
+  border: 0;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  padding: 2px 0;
+}
+.link-btn:hover {
+  color: var(--amber);
+}

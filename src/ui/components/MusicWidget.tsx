@@ -1,9 +1,58 @@
 // Tocador da trilha do boteco, no canto de baixo à esquerda: música tocando, anterior, tocar ou
-// pausar, próxima e aleatório. Sem faixas, vira um convite para colocar as suas.
+// pausar, próxima e aleatório, e um campo para colar link do YouTube. Sem faixas, vira um convite
+// para colocar as suas.
 
 import { useEffect, useRef, useState } from 'react';
-import { hasMusicFolder, next, openMusicFolder, prev, refreshMusic, setShuffle, togglePlay, playFiles, useMusic } from '../../audio/music';
-import { useApp } from '../store';
+import { hasMusicFolder, next, openMusicFolder, playFiles, playSrc, prev, refreshMusic, resolveYouTube, setShuffle, setYouTubeErrorHandler, togglePlay, useMusic } from '../../audio/music';
+import { getState, setSettings, toast, useApp } from '../store';
+
+setYouTubeErrorHandler(() => toast('Não deu para abrir o YouTube: sem internet ou o site está bloqueado nesta rede.', 'bad'));
+
+/** Adiciona um link do YouTube à trilha e já toca. Devolve se deu certo. */
+export async function addYouTubeLink(text: string): Promise<boolean> {
+  const link = await resolveYouTube(text);
+  if (!link) {
+    toast('Esse link não parece ser de um vídeo do YouTube.', 'bad');
+    return false;
+  }
+  const links = getState().settings.musicLinks ?? [];
+  if (!links.some((l) => l.id === link.id)) setSettings({ musicLinks: [...links, link] });
+  if (!getState().settings.musicOn) setSettings({ musicOn: true });
+  playSrc(`yt:${link.id}`);
+  toast(`Na trilha: ${link.title}`, 'good');
+  return true;
+}
+
+export function YouTubeField() {
+  const [url, setUrl] = useState('');
+  const [busy, setBusy] = useState(false);
+  const add = async () => {
+    if (!url.trim() || busy) return;
+    setBusy(true);
+    if (await addYouTubeLink(url)) setUrl('');
+    setBusy(false);
+  };
+  return (
+    <form
+      className="yt-field"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void add();
+      }}
+    >
+      <input
+        value={url}
+        placeholder="Colar link do YouTube"
+        aria-label="Link do YouTube"
+        onChange={(e) => setUrl(e.target.value)}
+        onKeyDown={(e) => e.stopPropagation()}
+      />
+      <button className="btn small primary" disabled={busy || !url.trim()}>
+        {busy ? '…' : '+'}
+      </button>
+    </form>
+  );
+}
 
 export function MusicWidget() {
   const m = useMusic();
@@ -38,7 +87,14 @@ export function MusicWidget() {
           {t ? (
             <>
               <div className="music-now" title={t.artist ? `${t.artist} - ${t.title}` : t.title}>
-                <b>{t.title}</b>
+                <b>
+                  {t.youtube && (
+                    <span className="yt-badge" aria-label="YouTube">
+                      ▶
+                    </span>
+                  )}
+                  {t.title}
+                </b>
                 {t.artist && <small>{t.artist}</small>}
               </div>
               <div className="music-controls">
@@ -67,14 +123,15 @@ export function MusicWidget() {
               <p>Sem trilha ainda.</p>
               <p className="muted">
                 {hasMusicFolder()
-                  ? 'Coloque seus MP3 (ex.: "Thiaguinho - Buquê de Flores.mp3") na pasta Músicas\\Trucado.'
-                  : 'Escolha arquivos de música do seu computador para tocar durante o jogo.'}
+                  ? 'Cole um link do YouTube abaixo ou coloque seus MP3 (ex.: "Thiaguinho - Buquê de Flores.mp3") na pasta Músicas\\Trucado.'
+                  : 'Cole um link do YouTube abaixo ou escolha arquivos de música do seu computador.'}
               </p>
-              <button className="btn small primary" onClick={choose}>
+              <button className="btn small" onClick={choose}>
                 {hasMusicFolder() ? 'Abrir pasta das músicas' : 'Escolher músicas'}
               </button>
             </div>
           )}
+          <YouTubeField />
         </div>
       )}
     </div>

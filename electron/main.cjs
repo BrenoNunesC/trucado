@@ -4,10 +4,11 @@
 // Também cuida de duas coisas que a página não alcança sozinha:
 //  - a pasta de músicas (Músicas\Trucado): lista as faixas e serve cada uma pelo endereço
 //    musica://<arquivo>, sem deixar sair da pasta;
+//  - o player de músicas do YouTube (precisa de uma origem para tocar);
 //  - a atualização automática pelo GitHub Releases (só no instalador; a versão portátil não se
 //    atualiza sozinha).
 
-const { app, BrowserWindow, Menu, shell, protocol, net, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, Menu, shell, protocol, net, ipcMain, dialog, session } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
@@ -123,6 +124,17 @@ app.whenReady().then(() => {
     }
   });
   ipcMain.handle('musica:abrir-pasta', () => shell.openPath(dir));
+
+  // músicas do YouTube: o player embutido recusa tocar numa página sem origem (o jogo abre de
+  // file://), então os pedidos ao YouTube saem com a página do projeto como referência
+  session.defaultSession.webRequest.onBeforeSendHeaders(
+    { urls: ['https://www.youtube.com/*', 'https://youtube.com/*', 'https://www.youtube-nocookie.com/*'] },
+    (details, done) => {
+      const headers = details.requestHeaders;
+      if (!headers.Referer && !headers.referer) headers.Referer = 'https://github.com/BrenoNunesC/trucado';
+      done({ requestHeaders: headers });
+    },
+  );
 
   const win = createWindow();
   setupUpdates(win);

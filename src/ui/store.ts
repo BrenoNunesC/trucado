@@ -128,7 +128,7 @@ const state: AppState = {
 };
 
 configureAudio(state.settings.volume, state.settings.muted);
-configureMusic(state.settings.musicVolume, state.settings.musicOn && !state.settings.muted);
+configureMusic(state.settings.musicVolume, state.settings.musicOn && !state.settings.muted, state.settings.musicLinks);
 // administrador: o que entrou no jogo desde a última vez também já vem liberado
 if (state.profile.admin) queueMicrotask(unlockEverything);
 configureFx(state.settings.screenShake, state.settings.reducedMotion);
@@ -217,7 +217,7 @@ export function setSettings(patch: Partial<Settings>): void {
   Object.assign(state.settings, patch);
   saveSettings(state.settings);
   configureAudio(state.settings.volume, state.settings.muted);
-  configureMusic(state.settings.musicVolume, state.settings.musicOn && !state.settings.muted);
+  configureMusic(state.settings.musicVolume, state.settings.musicOn && !state.settings.muted, state.settings.musicLinks);
   configureFx(state.settings.screenShake, state.settings.reducedMotion);
   emit();
 }

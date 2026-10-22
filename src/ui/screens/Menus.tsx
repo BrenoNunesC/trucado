@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { ACHIEVEMENTS } from '../../data/achievements';
-import { hasMusicFolder, openMusicFolder, refreshMusic, useMusic } from '../../audio/music';
+import { hasMusicFolder, openMusicFolder, playSrc, refreshMusic, useMusic } from '../../audio/music';
+import { YouTubeField } from '../components/MusicWidget';
 import { sfx } from '../../audio/sfx';
 import { BOSSES } from '../../data/bosses';
 import { DECKS, STAKES } from '../../data/decks';
@@ -268,6 +269,25 @@ function MusicSettings() {
         </>
       ) : (
         <p className="muted">No navegador, use o tocador (canto de baixo à esquerda) para escolher as músicas do seu computador.</p>
+      )}
+      <h4>Do YouTube</h4>
+      <p className="muted">
+        Cole o link de um vídeo (youtube.com, youtu.be ou YouTube Music). Toca no player do YouTube, que aparece no canto enquanto a música toca; precisa de internet.
+      </p>
+      <YouTubeField />
+      {st.musicLinks.length > 0 && (
+        <ul className="yt-list">
+          {st.musicLinks.map((l) => (
+            <li key={l.id}>
+              <button className="link-btn" onClick={() => playSrc(`yt:${l.id}`)} title="Tocar agora">
+                ▶ {l.title}
+              </button>
+              <button className="btn small danger" onClick={() => setSettings({ musicLinks: st.musicLinks.filter((x) => x.id !== l.id) })} aria-label={`Tirar ${l.title}`}>
+                ✕
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </section>
   );

@@ -5,6 +5,12 @@ import type { RunState } from '../engine/state';
 export type TableTheme = 'itaipava' | 'sinuca' | 'quintal';
 export type TableThemeSetting = TableTheme | 'auto';
 
+/** Música do YouTube: id do vídeo e o título (do YouTube ou o nome que você deu). */
+export interface MusicLink {
+  id: string;
+  title: string;
+}
+
 const KEY_RUN = 'trucado.run.v1';
 const KEY_PROFILE = 'trucado.profile.v1';
 const KEY_SETTINGS = 'trucado.settings.v1';
@@ -33,6 +39,8 @@ export interface Settings {
   /** Volume da música (separado dos efeitos). */
   musicVolume: number;
   musicOn: boolean;
+  /** Músicas do YouTube adicionadas por link. */
+  musicLinks: MusicLink[];
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -54,6 +62,7 @@ export const DEFAULT_SETTINGS: Settings = {
   playerId: '',
   musicVolume: 0.5,
   musicOn: true,
+  musicLinks: [],
 };
 
 export interface Profile {
