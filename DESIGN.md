@@ -81,7 +81,14 @@ string de 8 caracteres (A–Z, 0–9) convertida em inteiro por hash.
 Meta de pontuação, 4 mãos e 3 blefes (padrão). Cada mão: 3 cartas do baralho do
 jogador (monte embaralhado no início do Blind, como no Balatro) contra 3 cartas
 do baralho da casa (40 cartas normais, reembaralhado a cada mão). **A vira sai do
-baralho da casa**, para a manilha não depender do baralho personalizado.
+monte do jogador** (a 4ª carta de cada mão): o baralho que você monta também decide a manilha
+(muitos 5 no baralho → manilha 6 com frequência). A **manilha só pode ser um valor que existe no seu baralho**: se a carta seguinte à vira não
+está nele (ex.: você destruiu todos os 4), pula para a próxima, e assim por diante, dando a volta na
+ordem até achar uma (no pior caso, o próprio valor da vira). Quem calcula é `manilhaFromVira(vira,
+existentes)`; a mão recebe a lista em `HandOptions.availableRanks` e avisa no log quando pulou. Modo livre
+e tutorial usam o baralho completo, então não pulam nada. A vira volta ao descarte no fim da mão, e a casa
+nunca segura uma carta igual a ela. Com a vira rotativa (Madame Zuleika), as duas viradas seguintes
+saem do mesmo monte junto com a primeira e também voltam ao descarte.
 
 **Blefe:** antes de jogar a 1ª carta da mão, trocar até 2 cartas por novas do
 monte. Se o monte acabar, o descarte é reembaralhado.
@@ -200,3 +207,31 @@ começo não deve acabar a run.
 - **Coringas de boteco** em `src/data/jokers/boteco.ts`: cerveja e petisco que acabam com o uso (Garrafa
   de 600, Porção de Torresmo), escaláveis (Engradado, Barril de Chope, Coleção de Tampinhas) e o lendário
   Seu Zé do Bar.
+- **Pau-Brasil** (`src/data/jokers/paus.ts`): raro, ×1.4 Mult por rodada vencida com carta de Paus. Combina
+  com baralhos cheios de Paus, com o Zap e com Coringas que repetem a carta vencedora.
+- **Vouchers (21):** os de nível 2 exigem o de nível 1 (`requires`). Novos: Cortesia da Casa (1ª rolagem
+  grátis), Prateleira de Pacotes (+1 pacote), Gorjeta e Gorjetão (+$1 e +$2 por mão vencida), Seguro de Truco
+  (perder com aposta custa metade), Olho Vivo (uma carta do adversário sempre visível), Mão Cheia (blefe troca
+  até 3), Balcão Cheio (+1 item na loja, exige Vitrine) e Fiado Eterno (40% de desconto no total, exige
+  Liquidação).
+
+### Segunda leva de conteúdo
+- **Coringas (93 no total):** `src/data/jokers/novos.ts` traz 23 novos, todos só com os ganchos existentes.
+  Comuns de petisco e bebida (Cafezinho, Farofa, Quentinha, Guaraná, Pipoca, Brigadeiro, Chinelada, Isqueiro),
+  incomuns de situação (Torcida Organizada, Apito do Árbitro, Churrasqueira, Passista, Carteiro e quatro
+  que premiam uma Jogada específica: Mestre da Virada, Rei do Pé de Mesa, Arregão, Fechador), raros de
+  economia e baralho (Gerente do Bar, Mão-de-Vaca, Ganancioso, Dono do Sebo) e as lendas Padre Cícero e
+  Maria Bonita.
+- **Tarôs (+9):** Pedreiro, Lavadeira, Cartomante, Feirante, Faxineira, Parteira, Vidente, Pintor, Palpite.
+- **Mandingas (+8):** Sal Grosso, Água Benta (+1 mão em 2 Blinds), Boneco de Pano (copia o Coringa da esquerda
+  e sacrifica outro), Atabaque, Trevo de Quatro Folhas, Fogueira de São João, Pomba-Gira, Seu Exu. Novo
+  Pacote Mega de Mandingas (1 de 4).
+- **Tags (+6):** Cara de Pau (+1 blefe), Vaquinha, Baralho Novo, Banca, Fiado (metade do preço) e Brilho
+  (Coringa com edição de graça).
+- **Vouchers (+4, total 25):** Cobrador, Baralho Novo, Bolso Sem Fundo (nível 2) e Amigo do Dono (nível 2).
+- **Baralhos (+3):** Paus (as 40 cartas de Paus, toda manilha é Zap), Fiado ($0 e dois Coringas) e Enxuto
+  (24 cartas altas com a Mão-de-Vaca). O Enxuto ganha muito com cartas altas, então as metas dele são o dobro:
+  o simulador deu ~5,5% de vitória, perto dos ~4,7% do Clássico (com 1.8× deu 7% e com 1.2× deu 13%).
+- **Chefes (+6) e fregueses (+5):** Comadre Quitéria, Cobrador Zé Cabeção, Seu Aurélio Padeiro, Juiz Dr. Rui,
+  Ciganinha Esmeralda e o chefe final O Prefeito; fregueses Dona Cida, Seu Jorge, Vanessa, Deivid e Seu
+  Osvaldo, todos com retrato próprio (`tests/conteudo.test.ts` confere que ninguém ficou sem arte).

@@ -308,7 +308,7 @@ describe('Determinismo', () => {
   });
 
   it('runs automáticas de todos os decks terminam sem erro', () => {
-    for (const deckId of ['classico', 'sujo', 'bar', 'compadre', 'rezado', 'bicho']) {
+    for (const deckId of ['classico', 'sujo', 'bar', 'compadre', 'rezado', 'bicho', 'paus', 'fiado', 'enxuto']) {
       for (let i = 0; i < 5; i++) {
         const r = autoRun(newRun({ seed: `D${deckId}${i}`, deckId, stake: 1 + (i % 8) }));
         expect(r.ante).toBeGreaterThanOrEqual(1);
@@ -316,4 +316,53 @@ describe('Determinismo', () => {
     }
     // 30 runs completas levam ~4 s; com a máquina ocupada passam do limite padrão de 5 s
   }, 30_000);
+});
+
+describe('Pau-Brasil e vouchers de dinheiro', () => {
+  it('Pau-Brasil: ×1.4 por rodada vencida com Paus', () => {
+    const run = setup(['pauBrasil']);
+    // vira Q → manilha J; 3♣ e 2♣ vencem as duas rodadas
+    const hand = put(run, [['3', 'paus'], ['2', 'paus'], ['4', 'ouros']], WIN_FECHOU[1], WIN_FECHOU[2]);
+    play(hand, [[0, 0], [0, 0]]);
+    const s = scoreHand(run, run.blind!, hand);
+    expect(s.chips).toBe(40);
+    expect(s.total).toBe(Math.floor(40 * 2 * 1.4 * 1.4));
+    // sem Paus nas rodadas vencidas, não faz nada
+    const plain = put(run, ...WIN_FECHOU);
+    play(plain, [[0, 0], [0, 0]]);
+    expect(scoreHand(run, run.blind!, plain).total).toBe(80);
+  });
+
+  it('Gorjeta e Gorjetão: +$1 e +$2 por mão vencida', () => {
+    const run = setup();
+    run.money = 10;
+    run.vouchers.push('gorjeta');
+    play(put(run, ...WIN_FECHOU), [[0, 0], [0, 0]]);
+    finishHand(run);
+    expect(run.money).toBe(11);
+
+    run.vouchers.push('gorjetao');
+    play(put(run, ...WIN_FECHOU), [[0, 0], [0, 0]]);
+    finishHand(run);
+    expect(run.money).toBe(13);
+  });
+
+  it('Seguro de Truco: perder uma mão com Seis custa metade', () => {
+    const lose = (run: RunState) => {
+      const hand = put(run, WIN_FECHOU[1], WIN_FECHOU[0], WIN_FECHOU[2]);
+      bet(hand, 'player');
+      respond(hand, 'ai', 'raise');
+      respond(hand, 'player', 'accept'); // Seis aceito
+      play(hand, [[0, 0], [0, 0]]);
+      return finishHand(run);
+    };
+    const sem = setup();
+    sem.money = 10;
+    expect(lose(sem).moneyLost).toBe(2);
+
+    const com = setup();
+    com.money = 10;
+    com.vouchers.push('seguroTruco');
+    expect(lose(com).moneyLost).toBe(1);
+  });
 });

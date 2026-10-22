@@ -25,12 +25,13 @@
   --black-suit: #1b1b26;
   --cw: 88px;
   --radius: 12px;
-  /* títulos e números grandes: condensada e encorpada; todo o resto: Barlow, fácil de ler */
-  --font-display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
-  --font-title: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
-  --font-label: 'Barlow', system-ui, sans-serif;
-  --font-body: 'Barlow', system-ui, sans-serif;
-  --font-mono: 'Barlow', system-ui, sans-serif;
+  /* títulos e números grandes: Yanone Kaffeesatz, com cara de letreiro de boteco antigo;
+     todo o resto: Nunito, arredondada e fácil de ler */
+  --font-display: 'Yanone Kaffeesatz', 'Arial Narrow', system-ui, sans-serif;
+  --font-title: 'Yanone Kaffeesatz', 'Arial Narrow', system-ui, sans-serif;
+  --font-label: 'Nunito', system-ui, sans-serif;
+  --font-body: 'Nunito', system-ui, sans-serif;
+  --font-mono: 'Nunito', system-ui, sans-serif;
   color-scheme: dark;
 }
 
@@ -2850,22 +2851,25 @@ h3.rarity-raro,
 
 .table {
   border-radius: 18px;
-  /* tampo de madeira envernizada com marcas de copo, contorno escuro e sombra chapada */
+  /* tampo de madeira envernizada: veios (ruído esticado), poros, juntas das tábuas, brilho do
+     verniz sob a lâmpada, marcas de copo e bordas gastas */
   background:
-    radial-gradient(circle at 14% 24%, transparent 0 22px, rgba(0, 0, 0, 0.16) 23px 25px, transparent 26px),
-    radial-gradient(circle at 70% 84%, transparent 0 24px, rgba(0, 0, 0, 0.14) 25px 27px, transparent 28px),
-    repeating-linear-gradient(
-      91deg,
-      rgba(0, 0, 0, 0.1) 0 2px,
-      transparent 2px 9px,
-      rgba(255, 210, 160, 0.04) 9px 11px,
-      transparent 11px 23px
-    ),
-    linear-gradient(180deg, #7a4520 0%, #64361a 55%, #522c14 100%);
+    radial-gradient(ellipse 55% 40% at 50% 30%, rgba(255, 214, 150, 0.16), transparent 70%),
+    radial-gradient(circle at 14% 24%, transparent 0 22px, rgba(40, 18, 4, 0.22) 23px 25px, transparent 26px),
+    radial-gradient(circle at 16% 27%, transparent 0 20px, rgba(40, 18, 4, 0.12) 21px 22px, transparent 23px),
+    radial-gradient(circle at 70% 84%, transparent 0 24px, rgba(40, 18, 4, 0.18) 25px 27px, transparent 28px),
+    radial-gradient(ellipse at 38% 70%, rgba(30, 12, 2, 0.18), transparent 18%),
+    repeating-linear-gradient(180deg, transparent 0 118px, rgba(20, 8, 2, 0.55) 118px 120px, rgba(255, 200, 140, 0.1) 120px 121px, transparent 121px 122px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.4 0.75'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23p)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='240'%3E%3Cfilter id='g' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.004 0.09' numOctaves='4' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 0.24  0 0 0 0 0.12  0 0 0 0 0.04  0 0 0 -1.6 1.25'/%3E%3C/filter%3E%3Crect width='600' height='240' filter='url(%23g)'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, #8a4f24 0%, #6e3b18 55%, #562d12 100%);
+  background-size: auto, auto, auto, auto, auto, auto, 300px 300px, 900px 360px, auto;
+  background-blend-mode: normal, normal, normal, normal, multiply, normal, multiply, multiply, normal;
   border: 4px solid #2a160a;
   box-shadow:
     inset 0 0 0 3px #9a5e2e,
-    inset 0 0 40px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 5px rgba(40, 18, 4, 0.5),
+    inset 0 0 60px rgba(0, 0, 0, 0.5),
     0 8px 0 var(--b-shadow);
 }
 .table::before {
@@ -3425,3 +3429,8 @@ h3.rarity-raro,
     animation-iteration-count: 1 !important;
   }
 }
+
+/* reordenar Coringas arrastando */
+.joker-row .slot[draggable='true'] { cursor: grab; }
+.joker-row .slot.dragging { opacity: 0.4; }
+.joker-row .slot.drop-target { outline: 2px dashed #ffd34d; outline-offset: 3px; border-radius: 8px; }

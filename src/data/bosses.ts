@@ -261,7 +261,86 @@ export const BOSSES: BossDef[] = [
       r.halfBase = true;
     },
   },
+  {
+    id: 'comadre',
+    name: 'Comadre Quitéria',
+    description: 'Sem blefes, e as manilhas não pontuam fichas.',
+    icon: '🧶',
+    color: '#b84ab8',
+    personality: 'medroso',
+    minAnte: 4,
+    apply: (r) => {
+      r.bluffs = 0;
+      r.noManilhaChips = true;
+    },
+  },
+  {
+    id: 'cobradorBoss',
+    name: 'Cobrador Zé Cabeção',
+    description: 'Você perde $1 por carta jogada, e o adversário abre todas as mãos.',
+    icon: '🧾',
+    color: '#8a6a32',
+    personality: 'agressivo',
+    minAnte: 3,
+    apply: (r) => {
+      r.moneyPerCard = 1;
+      r.aiAlwaysMao = true;
+    },
+  },
+  {
+    id: 'padeiro',
+    name: 'Seu Aurélio Padeiro',
+    description: 'Toda mão já começa valendo Truco, mas ninguém pode aumentar.',
+    icon: '🥖',
+    color: '#d8a030',
+    personality: 'equilibrado',
+    minAnte: 2,
+    apply: (r) => {
+      r.startLevel = 1;
+      r.maxLevel = 1;
+    },
+  },
+  {
+    id: 'juizBoss',
+    name: 'Juiz Dr. Rui',
+    description: 'Toda canga conta como rodada do adversário, e ninguém pode pedir truco.',
+    icon: '⚖️',
+    color: '#56676a',
+    personality: 'calculista',
+    minAnte: 4,
+    apply: (r) => {
+      r.tieLoses = true;
+      r.noBets = true;
+    },
+  },
+  {
+    id: 'ciganinha',
+    name: 'Ciganinha Esmeralda',
+    description: 'A vira muda a cada rodada, e cada blefe custa $1.',
+    icon: '🪬',
+    color: '#3ab89a',
+    personality: 'blefador',
+    minAnte: 3,
+    apply: (r) => {
+      r.rotatingVira = true;
+      r.bluffCost = 1;
+    },
+  },
   // ---------------------------------------------------------------- finais (Ante 8)
+  {
+    id: 'prefeito',
+    name: 'O Prefeito',
+    description: 'Sem blefes, e ninguém aposta além do Truco.',
+    icon: '🏛️',
+    color: '#4a7ad8',
+    personality: 'calculista',
+    minAnte: 8,
+    finale: true,
+    apply: (r) => {
+      r.bluffs = 0;
+      r.maxLevel = 1;
+    },
+  },
   {
     id: 'imperador',
     name: 'O Rei do Camarote',

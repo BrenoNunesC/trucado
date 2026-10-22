@@ -156,6 +156,15 @@ export function gainTag(run: RunState, tagId: string): string {
       case 'mandinga':
         queuePack(run, 'mandingas');
         break;
+      case 'gorjetaTag':
+        run.money += Math.min(12, 2 * run.jokers.length);
+        break;
+      case 'cartasTag':
+        queuePack(run, 'cartasMega');
+        break;
+      case 'coringasTag':
+        queuePack(run, 'coringasMega');
+        break;
       default:
         run.tags.push(tagId);
     }

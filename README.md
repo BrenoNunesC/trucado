@@ -83,7 +83,9 @@ No celular: toque para selecionar, toque duas vezes para jogar, segure para ver 
 ## Regras de Truco adotadas
 
 - Baralho de 40 cartas (sem 8, 9, 10). Força crescente: **4 5 6 7 Q J K A 2 3**.
-- **Vira e manilha**: a manilha é o valor seguinte ao da vira (vira 3 → manilha 4). Manilhas
+- **Vira e manilha**: a manilha é o valor seguinte ao da vira (vira 3 → manilha 4). Na campanha, a
+  vira é uma carta do seu próprio baralho e a manilha pula os valores que não existem nele (se você não
+  tem nenhum 4, vira 3 → manilha 5, e assim por diante). Manilhas
   vencem tudo e se desempatam pelo naipe: **Paus (Zap) > Copas > Espadas > Ouros**.
 - Melhor de 3 rodadas. Mesmo valor empata (**canga**):
   - canga na 1ª → quem vencer a 2ª leva (se a 2ª também empatar, decide a 3ª);

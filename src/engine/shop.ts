@@ -34,7 +34,8 @@ import type { JokerEdition, PackOption, Rarity, RunState, ShopItem, ShopState } 
 
 export function price(run: RunState, base: number): number {
   let p = base;
-  if (hasVoucher(run, 'liquidacao')) p = Math.floor(p * 0.75);
+  if (hasVoucher(run, 'fiadoEterno')) p = Math.floor(p * 0.6);
+  else if (hasVoucher(run, 'liquidacao')) p = Math.floor(p * 0.75);
   if (run.stake >= 7) p += 1;
   return Math.max(0, p);
 }
@@ -82,7 +83,7 @@ function shopItem(run: RunState, exclude: string[]): ShopItem {
 }
 
 function shopItems(run: RunState): ShopItem[] {
-  const n = SHOP_ITEM_SLOTS + (hasVoucher(run, 'vitrine') ? 1 : 0);
+  const n = SHOP_ITEM_SLOTS + (hasVoucher(run, 'vitrine') ? 1 : 0) + (hasVoucher(run, 'balcaoCheio') ? 1 : 0);
   const items: ShopItem[] = [];
   for (let i = 0; i < n; i++) {
     const exclude = items.flatMap((it) => (it.kind === 'joker' ? [it.id] : []));
@@ -98,13 +99,14 @@ function availableVouchers(run: RunState) {
 export function rerollCost(run: RunState): number {
   const shop = run.shop!;
   if (shop.freeRerolls > 0) return 0;
-  let discount = hasVoucher(run, 'garcomAmigo') ? 2 : 0;
+  let discount = (hasVoucher(run, 'garcomAmigo') ? 2 : 0) + (hasVoucher(run, 'amigoDoDono') ? 2 : 0);
   for (const j of run.jokers) discount += jokerDef(j).passive?.rerollDiscount ?? 0;
   return Math.max(0, shop.rerollCost - discount);
 }
 
 export function generateShop(run: RunState): ShopState {
-  const packs = [0, 1].slice(0, SHOP_PACK_SLOTS).map(() => {
+  const packSlots = SHOP_PACK_SLOTS + (hasVoucher(run, 'prateleira') ? 1 : 0);
+  const packs = Array.from({ length: packSlots }, () => {
     const def = weighted(run.rng, PACKS, (p) => p.weight);
     return { id: def.id, price: price(run, def.price) };
   });
@@ -114,7 +116,7 @@ export function generateShop(run: RunState): ShopState {
     packs,
     voucher: vouchers.length ? { id: pick(run.rng, vouchers).id, price: price(run, VOUCHER_PRICE) } : null,
     rerollCost: REROLL_BASE,
-    freeRerolls: 0,
+    freeRerolls: hasVoucher(run, 'cortesia') ? 1 : 0,
     destroyCost: destroyCostFor(run),
   };
 
@@ -127,6 +129,12 @@ export function generateShop(run: RunState): ShopState {
     } else if (t === 'cupom') {
       for (const it of shop.items) it.price = 0;
       for (const p of shop.packs) p.price = 0;
+    } else if (t === 'desconto') {
+      for (const it of shop.items) it.price = Math.floor(it.price / 2);
+      for (const p of shop.packs) p.price = Math.floor(p.price / 2);
+    } else if (t === 'brilho') {
+      const edition = pick(run.rng, ['folheada', 'holografica', 'fosforescente'] as const);
+      shop.items.push({ kind: 'joker', id: randomJokerId(run, 'comum'), edition, price: 0 });
     } else if (t === 'rolagem') {
       shop.freeRerolls += 3;
     } else remaining.push(t);

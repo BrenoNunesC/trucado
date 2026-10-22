@@ -23,6 +23,12 @@ export const TAGS: TagDef[] = [
   { id: 'rolagem', name: 'Tag da Rolagem', description: 'A próxima loja tem 3 rolagens grátis.', icon: '🎲', when: 'shop', minAnte: 1 },
   { id: 'dobro', name: 'Tag do Dobro', description: 'A próxima Tag que você pegar vem em dobro.', icon: '✌️', when: 'nextTag', minAnte: 1 },
   { id: 'folego', name: 'Tag do Fôlego', description: '+1 mão no próximo Blind.', icon: '🫁', when: 'blind', minAnte: 1 },
+  { id: 'blefe', name: 'Tag da Cara de Pau', description: '+1 blefe no próximo Blind.', icon: '😶', when: 'blind', minAnte: 1 },
+  { id: 'gorjetaTag', name: 'Tag da Vaquinha', description: 'Ganhe $2 por Coringa seu (máx. $12) agora.', icon: '🐖', when: 'immediate', minAnte: 1 },
+  { id: 'cartasTag', name: 'Tag do Baralho Novo', description: 'Abre de graça um Pacote Mega de Cartas.', icon: '🂡', when: 'immediate', minAnte: 1 },
+  { id: 'coringasTag', name: 'Tag da Banca', description: 'Abre de graça um Pacote Mega de Coringas.', icon: '🃏', when: 'immediate', minAnte: 2 },
+  { id: 'desconto', name: 'Tag do Fiado', description: 'Itens e pacotes iniciais da próxima loja custam metade.', icon: '📒', when: 'shop', minAnte: 1 },
+  { id: 'brilho', name: 'Tag do Brilho', description: 'A próxima loja traz um Coringa Comum com edição, de graça.', icon: '✨', when: 'shop', minAnte: 2 },
 ];
 
 export const TAG_BY_ID = Object.fromEntries(TAGS.map((t) => [t.id, t])) as Record<string, TagDef>;

@@ -1,6 +1,6 @@
 // Consumíveis: Tarô de Boteco (mexe nas cartas), Gírias (sobem Jogadas) e Mandingas (raros e arriscados).
 
-import { EDITION_NAME, RANKS, SEAL_NAME, type Card, type Edition, type Seal, type Suit } from '../engine/cards';
+import { EDITION_NAME, makeCard, RANKS, SEAL_NAME, SUITS, type Card, type Edition, type Seal, type Suit } from '../engine/cards';
 import { int, pick, type Rng } from '../engine/rng';
 import type { CategoryId, ConsumableKind, JokerEdition, Rarity, RunState } from '../engine/state';
 import { MIN_DECK_SIZE } from './balance';
@@ -225,6 +225,129 @@ const TAROTS: ConsumableDef[] = [
       ctx.message(`Coringa agora é ${EDITION_NAME[j.edition]}!`);
     },
   },
+  {
+    id: 'pedreiro',
+    kind: 'tarot',
+    name: 'O Pedreiro',
+    icon: '🧱',
+    description: 'Sobe em 2 o valor de 1 carta escolhida (4→6, Q→K … o 3 é o teto).',
+    targets: { min: 1, max: 1 },
+    use: (ctx) => {
+      const c = ctx.targets[0];
+      c.rank = RANKS[Math.min(RANKS.length - 1, RANKS.indexOf(c.rank) + 2)];
+      ctx.message('Mais dois andares na carta.');
+    },
+  },
+  {
+    id: 'lavadeira',
+    kind: 'tarot',
+    name: 'A Lavadeira',
+    icon: '🧺',
+    description: 'Tira a edição e o selo de até 3 cartas e paga $2 por carta que tinha algo.',
+    targets: { min: 1, max: 3 },
+    use: (ctx) => {
+      let n = 0;
+      for (const c of ctx.targets) {
+        if (c.edition || c.seal) n += 1;
+        delete c.edition;
+        delete c.seal;
+      }
+      ctx.run.money += 2 * n;
+      ctx.message(n ? `Roupa lavada: +$${2 * n}.` : 'Já estavam limpas.');
+    },
+  },
+  {
+    id: 'cartomante',
+    kind: 'tarot',
+    name: 'A Cartomante',
+    icon: '🔮',
+    description: 'Paga $5 e cria 1 Mandinga aleatória.',
+    blocked: (run) => (run.money < 5 ? 'Precisa de $5.' : null),
+    use: (ctx) => {
+      ctx.run.money -= 5;
+      ctx.message(ctx.addConsumable('mandinga') ? 'A cartomante tirou uma Mandinga da manga.' : 'Sem espaço para a Mandinga.');
+    },
+  },
+  {
+    id: 'feirante',
+    kind: 'tarot',
+    name: 'O Feirante',
+    icon: '🍉',
+    description: 'Cria 1 Coringa Comum (precisa de espaço).',
+    blocked: (run) => (run.jokers.length >= run.jokerSlots ? 'Sem espaço para Coringas.' : null),
+    use: (ctx) => {
+      ctx.addJoker({ rarity: 'comum' });
+      ctx.message('Olha a promoção!');
+    },
+  },
+  {
+    id: 'faxineira',
+    kind: 'tarot',
+    name: 'A Faxineira',
+    icon: '🧹',
+    description: 'Destrói 1 carta escolhida e ganha $3.',
+    targets: { min: 1, max: 1 },
+    blocked: (run) => deckTooSmall(run, 1),
+    use: (ctx) => {
+      ctx.destroyCards(ctx.targets);
+      ctx.run.money += 3;
+      ctx.message('Varreu pra debaixo do tapete: +$3.');
+    },
+  },
+  {
+    id: 'parteira',
+    kind: 'tarot',
+    name: 'A Parteira',
+    icon: '👶',
+    description: 'Adiciona 2 cartas ao baralho: um Ás e um 2, de naipes aleatórios.',
+    use: (ctx) => {
+      ctx.addCards([makeCard('A', pick(ctx.rng, SUITS), 'p'), makeCard('2', pick(ctx.rng, SUITS), 'p')]);
+      ctx.message('Nasceram duas cartas!');
+    },
+  },
+  {
+    id: 'vidente',
+    kind: 'tarot',
+    name: 'A Vidente',
+    icon: '🌙',
+    description: 'Sobe 1 nível de uma Jogada aleatória.',
+    use: (ctx) => {
+      const cat = pick(ctx.rng, CATEGORIES);
+      ctx.run.levels[cat.id] += 1;
+      ctx.message(`${cat.name} subiu para o nível ${ctx.run.levels[cat.id]}.`);
+    },
+  },
+  {
+    id: 'pintor',
+    kind: 'tarot',
+    name: 'O Pintor',
+    icon: '🎨',
+    description: 'Dá uma edição aleatória (Folheada, Holográfica ou Fosforescente) a 1 carta, mas troca o naipe dela ao acaso.',
+    targets: { min: 1, max: 1 },
+    use: (ctx) => {
+      const c = ctx.targets[0];
+      c.edition = pick(ctx.rng, ['folheada', 'holografica', 'fosforescente'] as const);
+      c.suit = pick(ctx.rng, SUITS);
+      ctx.message(`Obra-prima: ${EDITION_NAME[c.edition]}.`);
+    },
+  },
+  {
+    id: 'palpite',
+    kind: 'tarot',
+    name: 'O Palpite',
+    icon: '🎰',
+    description: '50% de chance de ganhar $10; senão perde $4 (nunca fica negativo).',
+    use: (ctx) => {
+      if (int(ctx.rng, 2) === 0) {
+        ctx.run.money += 10;
+        ctx.message('Deu na cabeça! +$10.');
+      } else {
+        const loss = Math.min(4, ctx.run.money);
+        ctx.run.money -= loss;
+        ctx.message(`Deu zebra: -$${loss}.`);
+      }
+    },
+  },
 ];
 
 const GIRIAS: ConsumableDef[] = CATEGORIES.map((cat) => ({
@@ -331,6 +454,129 @@ const MANDINGAS: ConsumableDef[] = [
   {
     ...editionTarot('letreiro', 'Letreiro de Neon', '💡', 'fosforescente', 1, '×1.5 Mult ao vencer rodada'),
     kind: 'mandinga',
+  },
+  {
+    id: 'salGrosso',
+    kind: 'mandinga',
+    name: 'Sal Grosso',
+    icon: '🧂',
+    description: 'Tira as edições e os selos de TODO o baralho e paga $1 por carta limpa (máx. $15).',
+    blocked: (run) => (run.deck.some((c) => c.edition || c.seal) ? null : 'Nenhuma carta tem edição ou selo.'),
+    use: (ctx) => {
+      let n = 0;
+      for (const c of ctx.run.deck) {
+        if (c.edition || c.seal) n += 1;
+        delete c.edition;
+        delete c.seal;
+      }
+      const gain = Math.min(15, n);
+      ctx.run.money += gain;
+      ctx.message(`Baralho limpo: +$${gain}.`);
+    },
+  },
+  {
+    id: 'aguaBenta',
+    kind: 'mandinga',
+    name: 'Água Benta',
+    icon: '💧',
+    description: '+1 mão em cada um dos próximos 2 Blinds.',
+    use: (ctx) => {
+      ctx.run.tags.push('folego', 'folego');
+      ctx.message('Abençoado por dois Blinds.');
+    },
+  },
+  {
+    id: 'bonecoDePano',
+    kind: 'mandinga',
+    name: 'Boneco de Pano',
+    icon: '🪆',
+    description: 'Copia o Coringa mais à esquerda (com edição) e destrói 1 outro Coringa aleatório.',
+    blocked: (run) => (run.jokers.length === 0 ? 'Você não tem Coringas.' : run.jokers.length === 1 && run.jokerSlots < 2 ? 'Sem espaço.' : null),
+    use: (ctx) => {
+      const src = ctx.run.jokers[0];
+      const others = ctx.run.jokers.slice(1);
+      if (others.length > 0) {
+        const victim = pick(ctx.rng, others);
+        ctx.run.jokers = ctx.run.jokers.filter((j) => j !== victim);
+      }
+      ctx.message(ctx.addJoker({ id: src.id, edition: src.edition }) ? 'O boneco ganhou um irmão gêmeo.' : 'Sem espaço para a cópia.');
+    },
+  },
+  {
+    id: 'atabaque',
+    kind: 'mandinga',
+    name: 'Atabaque',
+    icon: '🥁',
+    description: 'Copia até 3 cartas escolhidas (com edição e selo) e destrói o mesmo tanto de outras cartas aleatórias.',
+    targets: { min: 1, max: 3 },
+    blocked: (run, t) => (run.deck.length - t.length < Math.max(t.length, MIN_DECK_SIZE) ? 'Baralho pequeno demais.' : null),
+    use: (ctx) => {
+      const ids = new Set(ctx.targets.map((c) => c.id));
+      const pool = ctx.run.deck.filter((c) => !ids.has(c.id));
+      const victims: Card[] = [];
+      for (let i = 0; i < ctx.targets.length; i++) victims.push(pool.splice(int(ctx.rng, pool.length), 1)[0]);
+      const copies = ctx.targets.map((c) => ctx.copyCard(c));
+      ctx.destroyCards(victims);
+      ctx.addCards(copies);
+      ctx.message('O tambor chamou: cartas em dobro, e o preço foi pago.');
+    },
+  },
+  {
+    id: 'trevo',
+    kind: 'mandinga',
+    name: 'Trevo de Quatro Folhas',
+    icon: '🍀',
+    description: 'Ganha um valor sorteado entre $5 e $25.',
+    use: (ctx) => {
+      const gain = 5 + int(ctx.rng, 21);
+      ctx.run.money += gain;
+      ctx.message(`Sorte grande: +$${gain}.`);
+    },
+  },
+  {
+    id: 'fogueira',
+    kind: 'mandinga',
+    name: 'Fogueira de São João',
+    icon: '🔥',
+    description: 'Destrói 4 cartas aleatórias do baralho e cria um Coringa Incomum.',
+    blocked: (run) => (run.jokers.length >= run.jokerSlots ? 'Sem espaço para Coringas.' : deckTooSmall(run, 4)),
+    use: (ctx) => {
+      const pool = [...ctx.run.deck];
+      const victims: Card[] = [];
+      for (let i = 0; i < 4; i++) victims.push(pool.splice(int(ctx.rng, pool.length), 1)[0]);
+      ctx.destroyCards(victims);
+      ctx.addJoker({ rarity: 'incomum' });
+      ctx.message('Pula a fogueira: o fogo levou quatro e trouxe um.');
+    },
+  },
+  {
+    id: 'pomba',
+    kind: 'mandinga',
+    name: 'Pomba-Gira',
+    icon: '💃',
+    description: 'Paga $4 e cria um Coringa Comum Holográfico (+4 Mult).',
+    blocked: (run) => (run.money < 4 ? 'Precisa de $4.' : run.jokers.length >= run.jokerSlots ? 'Sem espaço para Coringas.' : null),
+    use: (ctx) => {
+      ctx.run.money -= 4;
+      ctx.addJoker({ rarity: 'comum', edition: 'holografica' });
+      ctx.message('Salve! O Coringa chegou brilhando.');
+    },
+  },
+  {
+    id: 'exu',
+    kind: 'mandinga',
+    name: 'Seu Exu',
+    icon: '🔱',
+    description: 'Até 2 cartas escolhidas viram 3 de Paus. Seu dinheiro cai pela metade.',
+    targets: { min: 1, max: 2 },
+    use: (ctx) => {
+      for (const c of ctx.targets) {
+        c.rank = '3';
+        c.suit = 'paus';
+      }
+      ctx.run.money = Math.floor(ctx.run.money / 2);
+      ctx.message('Laroyê! O trato está feito.');
+    },
   },
   {
     id: 'fitaGravada',

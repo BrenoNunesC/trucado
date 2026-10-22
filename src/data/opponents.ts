@@ -28,6 +28,11 @@ export const OPPONENTS: OpponentDef[] = [
   { id: 'paty', name: 'Jurema', bio: 'Rezadeira de dia, trucadora de noite. Diz que lê a sorte nas cartas.', personality: 'blefador', color: '#b84ab8' },
   { id: 'zeca', name: 'Zeca Mecânico', bio: 'Conserta Fusca, Brasília e Chevette. A mão nunca sai limpa da graxa.', personality: 'equilibrado', color: '#c9a227' },
   { id: 'telma', name: 'Telma Telefonista', bio: 'Trabalhou anos na central. Ouve tudo e não comenta nada.', personality: 'calculista', color: '#6fa0d8' },
+  { id: 'cida', name: 'Dona Cida Costureira', bio: 'Prova vestido de dia e a paciência dos outros à noite.', personality: 'equilibrado', color: '#c86aa8' },
+  { id: 'jorge', name: 'Seu Jorge Pescador', bio: 'Volta do rio com a vara na mão e três histórias que ninguém confere.', personality: 'blefador', color: '#4a9ab8' },
+  { id: 'vanessa', name: 'Vanessa Manicure', bio: 'Esmalte vermelho, opinião sobre tudo e pouca paciência pra perder.', personality: 'agressivo', color: '#e8457a' },
+  { id: 'deivid', name: 'Deivid Motoboy', bio: 'Entrega pizza em vinte minutos e perde a mão em dois.', personality: 'medroso', color: '#e0a030' },
+  { id: 'osvaldo', name: 'Seu Osvaldo Zelador', bio: 'Sabe de todos os segredos do prédio e de todas as cartas da mesa.', personality: 'calculista', color: '#7aa0c8' },
   { id: 'betinho', name: 'Betinho Gandula', bio: 'Busca bola no campo de várzea todo domingo. Ainda tá aprendendo o jogo.', personality: 'medroso', color: '#8ad84a' },
 ];
 

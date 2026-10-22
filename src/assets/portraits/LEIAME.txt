@@ -1,0 +1,3 @@
+Coloque aqui imagens dos adversarios, nomeadas pelo id (tonhao.png, rosana.jpg, bene.webp...).
+Cada imagem substitui o desenho em SVG do personagem. Formato quadrado recomendado (ex.: 512x512).
+Os ids estao em src/data/opponents.ts e src/data/bosses.ts.

@@ -46,6 +46,8 @@ export interface HandOptions {
   tieWinner?: Side;
   /** Nível máximo de aposta (ex.: só até Truco). */
   maxLevel?: number;
+  /** Valores que o baralho tem: a manilha pula os que não existem nele. */
+  availableRanks?: Rank[];
 }
 
 export interface BetEvent {
@@ -99,8 +101,8 @@ export interface NewHandParams {
 }
 
 export function createHand(p: NewHandParams): TrucoHand {
-  const manilha = manilhaFromVira(p.vira.rank);
   const options = p.options ?? {};
+  const manilha = manilhaFromVira(p.vira.rank, options.availableRanks);
   const level = options.startLevel ?? 0;
   const hand: TrucoHand = {
     vira: p.vira,
@@ -120,7 +122,12 @@ export function createHand(p: NewHandParams): TrucoHand {
     log: [],
     options,
   };
-  log(hand, 'info', `Vira: ${cardLabel(p.vira)} → manilha é ${RANK_NAME[manilha]}.`);
+  const pulou = manilha !== manilhaFromVira(p.vira.rank);
+  log(
+    hand,
+    'info',
+    `Vira: ${cardLabel(p.vira)} → manilha é ${RANK_NAME[manilha]}${pulou ? ' (os valores que faltam no seu baralho foram pulados)' : ''}.`,
+  );
   return hand;
 }
 
@@ -300,7 +307,7 @@ function resolveRound(hand: TrucoHand): void {
   let manilha = round.manilha;
   if (hand.options.rotatingVira && hand.houseDeck.length > 0) {
     vira = hand.houseDeck.pop()!;
-    manilha = manilhaFromVira(vira.rank);
+    manilha = manilhaFromVira(vira.rank, hand.options.availableRanks);
     hand.vira = vira;
     hand.manilha = manilha;
     log(hand, 'info', `Nova vira: ${cardLabel(vira)} → manilha agora é ${RANK_NAME[manilha]}.`);

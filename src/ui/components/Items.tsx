@@ -1,5 +1,6 @@
 // Coringas e consumíveis: visual, tooltip e barra de inventário.
 
+import { useState } from 'react';
 import { sfx } from '../../audio/sfx';
 import { CONSUMABLE_BY_ID, KIND_NAME, type ConsumableDef } from '../../data/consumables';
 import { JOKER_BY_ID, RARITY_NAME } from '../../data/jokers';
@@ -125,6 +126,18 @@ export function InventoryBar({ busy }: { busy?: boolean }) {
   const s = useApp();
   const run = s.run!;
   const disabledUid = run.blind?.rules.disabledJoker;
+  /** Arrastar para reordenar: uid em arrasto e posição de destino. */
+  const [drag, setDrag] = useState<{ uid: string; over: number | null } | null>(null);
+  const drop = () => {
+    if (drag && drag.over !== null) {
+      const from = run.jokers.findIndex((x) => x.uid === drag.uid);
+      if (from >= 0 && drag.over !== from) {
+        sfx('click');
+        act((r) => moveJoker(r, drag.uid, drag.over!));
+      }
+    }
+    setDrag(null);
+  };
 
   const selectJoker = (uid: string) => {
     sfx('click');
@@ -151,15 +164,31 @@ export function InventoryBar({ busy }: { busy?: boolean }) {
           {run.jokers.map((j, i) => {
             const sel = s.selectedJoker === j.uid;
             return (
-              <div className="slot" key={j.uid}>
+              <div
+                className={`slot${drag?.uid === j.uid ? ' dragging' : ''}${drag && drag.over === i && drag.uid !== j.uid ? ' drop-target' : ''}`}
+                key={j.uid}
+                draggable={!busy}
+                onDragStart={(e) => {
+                  e.dataTransfer.effectAllowed = 'move';
+                  e.dataTransfer.setData('text/plain', j.uid);
+                  setDrag({ uid: j.uid, over: null });
+                }}
+                onDragOver={(e) => {
+                  if (!drag) return;
+                  e.preventDefault();
+                  if (drag.over !== i) setDrag({ ...drag, over: i });
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  drop();
+                }}
+                onDragEnd={() => setDrag(null)}
+              >
                 <Tip content={<JokerTip id={j.id} inst={j} />}>
                   <JokerFace id={j.id} edition={j.edition} disabled={j.uid === disabledUid} selected={sel} onClick={() => selectJoker(j.uid)} dataRef={j.uid} />
                 </Tip>
                 {sel && !busy && (
                   <div className="item-actions">
-                    <button className="btn tiny" disabled={i === 0} onClick={() => act((r) => moveJoker(r, j.uid, i - 1))} aria-label="Mover para a esquerda">
-                      ◀
-                    </button>
                     <button
                       className="btn tiny sell"
                       onClick={() => {
@@ -170,9 +199,6 @@ export function InventoryBar({ busy }: { busy?: boolean }) {
                       }}
                     >
                       Vender ${sellValue(j)}
-                    </button>
-                    <button className="btn tiny" disabled={i === run.jokers.length - 1} onClick={() => act((r) => moveJoker(r, j.uid, i + 1))} aria-label="Mover para a direita">
-                      ▶
                     </button>
                   </div>
                 )}

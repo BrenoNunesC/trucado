@@ -4,6 +4,7 @@ import { BOSS_BY_ID } from '../../data/bosses';
 import { CATEGORY_BY_ID } from '../../data/categories';
 import { FINAL_ANTE } from '../../data/balance';
 import { opponentFor } from '../../data/opponents';
+import { bluffMaxCards } from '../../engine/blind';
 import { update, useApp } from '../store';
 import { fmtMult, fmtNum } from '../text';
 import { Tip } from './Tip';
@@ -93,7 +94,7 @@ export function Sidebar() {
                 <b>{blind.handsLeft + (blind.stage === 'playing' || blind.stage === 'onze' ? 1 : 0)}</b>
               </div>
             </Tip>
-            <Tip content="Blefes: antes de jogar sua 1ª carta, troque até 2 cartas por novas do monte.">
+            <Tip content={`Blefes: antes de jogar sua 1ª carta, troque até ${bluffMaxCards(run)} cartas por novas do monte.`}>
               <div className="counter bluffs">
                 <span>Blefes</span>
                 <b>{blind.bluffsLeft}</b>

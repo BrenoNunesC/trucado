@@ -9,6 +9,7 @@ import {
   acceptOnze,
   aiStep,
   bluff,
+  bluffMaxCards,
   canBluff,
   declineOnze,
   finishHand,
@@ -146,10 +147,10 @@ export function BlindView() {
       update((st) => {
         const sel = st.selected;
         if (sel.includes(id)) st.selected = sel.filter((x) => x !== id);
-        else st.selected = [...sel, id].slice(-2);
+        else st.selected = [...sel, id].slice(-bluffMaxCards(run));
       });
     },
-    [playerTurn],
+    [playerTurn, run],
   );
 
   const play = useCallback(
@@ -300,7 +301,7 @@ export function BlindView() {
         {playerTurn && (
           <>
             <span className="hint">
-              {s.selected.length === 0 ? 'Sua vez: escolha uma carta (ou 1–3).' : s.selected.length === 1 ? 'Jogar ou blefar com a selecionada?' : 'Blefar: trocar as 2 selecionadas.'}
+              {s.selected.length === 0 ? 'Sua vez: escolha uma carta (ou 1–3).' : s.selected.length === 1 ? 'Jogar ou blefar com a selecionada?' : `Blefar: trocar as ${s.selected.length} selecionadas.`}
             </span>
             <button className="btn primary" disabled={s.selected.length !== 1} onClick={() => play(s.selected[0])}>
               Jogar <kbd>Enter</kbd>
@@ -321,7 +322,7 @@ export function BlindView() {
               </button>
             )}
             {canBluff(run) && (
-              <button className="btn" disabled={s.selected.length === 0} onClick={doBluff} title="Troca até 2 cartas por novas do monte">
+              <button className="btn" disabled={s.selected.length === 0} onClick={doBluff} title={`Troca até ${bluffMaxCards(run)} cartas por novas do monte`}>
                 Blefar ({blind.bluffsLeft}) <kbd>B</kbd>
               </button>
             )}

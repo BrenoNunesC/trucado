@@ -1,6 +1,6 @@
 // Mesa de truco: adversário, vira, rodadas e a mão do jogador.
 
-import { RANK_NAME, SUIT_NAME, type Card } from '../../engine/cards';
+import { manilhaFromVira, RANK_NAME, SUIT_NAME, type Card } from '../../engine/cards';
 import { BET_NAMES, betValue, isHidden, responder, type TrucoHand } from '../../engine/truco';
 import type { Speech } from '../store';
 import { CardView } from './CardView';
@@ -76,7 +76,11 @@ export function Table(p: TableProps) {
               <CardView back small className="vira hidden-vira" label="Vira escondida" />
             </Tip>
           ) : (
-            <Tip content={`Vira ${h.vira.rank}: a manilha é ${RANK_NAME[h.manilha]} (a carta seguinte). Manilhas vencem tudo: Paus (Zap) > Copas > Espadas > Ouros.`}>
+            <Tip
+              content={`Vira ${h.vira.rank}: a manilha é ${RANK_NAME[h.manilha]} ${
+                h.manilha === manilhaFromVira(h.vira.rank) ? '(a carta seguinte)' : '(a carta seguinte que existe no seu baralho)'
+              }. Manilhas vencem tudo: Paus (Zap) > Copas > Espadas > Ouros.`}
+            >
               <CardView card={h.vira} small className="vira flip-in" />
             </Tip>
           )}

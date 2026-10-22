@@ -67,8 +67,18 @@ export function suitIndex(suit: Suit): number {
   return SUITS.indexOf(suit);
 }
 
-export function manilhaFromVira(vira: Rank): Rank {
-  return RANKS[(rankIndex(vira) + 1) % RANKS.length];
+/**
+ * A manilha é o valor seguinte ao da vira. Se `existentes` for dado (os valores que o baralho
+ * realmente tem), valores ausentes são pulados até achar um que exista; no pior caso volta ao
+ * próprio valor da vira, que por definição existe.
+ */
+export function manilhaFromVira(vira: Rank, existentes?: readonly Rank[]): Rank {
+  const start = rankIndex(vira);
+  for (let passo = 1; passo <= RANKS.length; passo++) {
+    const candidata = RANKS[(start + passo) % RANKS.length];
+    if (!existentes || existentes.includes(candidata)) return candidata;
+  }
+  return vira;
 }
 
 export function isManilha(card: Pick<Card, 'rank'>, manilha: Rank): boolean {

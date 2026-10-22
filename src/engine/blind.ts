@@ -127,6 +127,14 @@ export function startBlind(run: RunState): BlindState {
     blind.rules.hands += 1;
   }
 
+  // Tag da Cara de Pau
+  const b = run.tags.indexOf('blefe');
+  if (b >= 0) {
+    run.tags.splice(b, 1);
+    blind.bluffsLeft += 1;
+    blind.rules.bluffs += 1;
+  }
+
   for (const j of activeJokers(run, blind)) jokerDef(j).blindStart?.(blindCtx(run, blind), j);
   dealHand(run);
   return blind;
@@ -148,7 +156,7 @@ function draw(run: RunState, blind: BlindState, n: number): Card[] {
 function pickRevealed(run: RunState, blind: BlindState): void {
   const hand = blind.hand!;
   blind.revealed = undefined;
-  if (hand.hands.player.some((c) => c.edition === 'marcada') && hand.hands.ai.length > 0) {
+  if ((hasVoucher(run, 'olhoVivo') || hand.hands.player.some((c) => c.edition === 'marcada')) && hand.hands.ai.length > 0) {
     blind.revealed = hand.hands.ai[int(run.rng, hand.hands.ai.length)].id;
   }
 }
@@ -158,11 +166,21 @@ export function dealHand(run: RunState): TrucoHand {
   blind.handsLeft -= 1;
   blind.handsPlayed += 1;
   blind.handFlags = { playerBetsAccepted: 0, bluffedThisHand: false };
-  const player = draw(run, blind, 3);
-  const house = shuffle(run.rng, standardDeck('h'));
-  const vira = house.pop()!;
-  const ai = [house.pop()!, house.pop()!, house.pop()!];
   const r = blind.rules;
+  const player = draw(run, blind, 3);
+  // a vira sai do baralho do jogador: o baralho que você monta também decide a manilha.
+  // Com a vira rotativa (Madame Zuleika), as próximas duas viradas já saem junto, do mesmo monte.
+  const viraCards = draw(run, blind, r.rotatingVira ? 3 : 1);
+  const house = shuffle(run.rng, standardDeck('h'));
+  for (const v of viraCards) {
+    // a casa não segura uma carta igual à vira (a IA parte do baralho padrão menos a vira)
+    const i = house.findIndex((c) => c.rank === v.rank && c.suit === v.suit);
+    if (i >= 0) house.splice(i, 1);
+  }
+  const vira = viraCards.pop() ?? house.pop()!;
+  const ai = [house.pop()!, house.pop()!, house.pop()!];
+  // para a vira rotativa, houseDeck são as próximas viradas (sai do fim); senão, o resto da casa
+  const houseDeck = r.rotatingVira ? viraCards : house;
   const mao = r.aiAlwaysMao || blind.handsPlayed % 2 === 0 ? 'ai' : 'player';
   const options: HandOptions = {
     noBets: r.noBets,
@@ -170,6 +188,8 @@ export function dealHand(run: RunState): TrucoHand {
     tieWinner: r.tieLoses ? 'ai' : undefined,
     startLevel: r.startLevel || undefined,
     maxLevel: r.maxLevel < 4 ? r.maxLevel : undefined,
+    // a manilha só pode ser um valor que existe no baralho do jogador
+    availableRanks: [...new Set(run.deck.map((c) => c.rank))],
   };
   let stage: BlindState['stage'] = 'playing';
   const lastHand = blind.handsLeft === 0;
@@ -182,7 +202,7 @@ export function dealHand(run: RunState): TrucoHand {
     options.startLevel = Math.max(1, options.startLevel ?? 0);
     stage = 'onze';
   }
-  const hand = createHand({ player, ai, vira, mao, houseDeck: house, options });
+  const hand = createHand({ player, ai, vira, mao, houseDeck, options });
   if (options.blindPlay) hand.log.push({ kind: 'info', text: 'MÃO DE FERRO: cartas às cegas, valendo Seis!' });
   if (stage === 'onze') hand.log.push({ kind: 'info', text: 'MÃO DE ONZE: jogue valendo Truco ou desista.' });
   blind.hand = hand;
@@ -192,6 +212,11 @@ export function dealHand(run: RunState): TrucoHand {
 }
 
 // ---------------------------------------------------------------- ações do jogador
+
+/** Quantas cartas um blefe pode trocar. */
+export function bluffMaxCards(run: RunState): number {
+  return BLUFF_MAX_CARDS + (hasVoucher(run, 'maoCheia') ? 1 : 0);
+}
 
 export function canBluff(run: RunState): boolean {
   const b = run.blind;
@@ -204,7 +229,8 @@ export function bluff(run: RunState, cardIds: string[]): Card[] {
   const blind = run.blind!;
   const hand = blind.hand!;
   if (!canBluff(run)) throw new Error('Não dá para blefar agora');
-  if (cardIds.length < 1 || cardIds.length > BLUFF_MAX_CARDS) throw new Error(`Troque de 1 a ${BLUFF_MAX_CARDS} cartas`);
+  const max = bluffMaxCards(run);
+  if (cardIds.length < 1 || cardIds.length > max) throw new Error(`Troque de 1 a ${max} cartas`);
   const out = hand.hands.player.filter((c) => cardIds.includes(c.id));
   const keep = hand.hands.player.filter((c) => !cardIds.includes(c.id));
   const fresh = draw(run, blind, out.length);
@@ -339,6 +365,12 @@ export function finishHand(run: RunState): HandSummary {
       const score = scoreHand(run, blind, hand);
       summary.score = score;
       summary.moneyGained += score.money;
+      const tip = (hasVoucher(run, 'gorjeta') ? 1 : 0) + (hasVoucher(run, 'gorjetao') ? 1 : 0);
+      if (tip > 0) {
+        run.money += tip;
+        summary.moneyGained += tip;
+        summary.messages.push(`Gorjeta: +$${tip}`);
+      }
       blind.score += score.total;
       if (score.total > run.stats.bestHand) {
         run.stats.bestHand = score.total;
@@ -353,7 +385,8 @@ export function finishHand(run: RunState): HandSummary {
         blind.freeLossUsed = true;
         summary.messages.push('Zé Pilintra cobriu a aposta perdida.');
       } else {
-        const loss = Math.min(run.money, BET_LOSS[hand.level]);
+        const base = hasVoucher(run, 'seguroTruco') ? Math.floor(BET_LOSS[hand.level] / 2) : BET_LOSS[hand.level];
+        const loss = Math.min(run.money, base);
         run.money -= loss;
         summary.moneyLost = loss;
         if (loss > 0) summary.messages.push(`Aposta perdida: −$${loss}.`);
@@ -384,6 +417,10 @@ export function finishHand(run: RunState): HandSummary {
   // cartas voltam para o descarte
   const used: Card[] = [...hand.hands.player];
   for (const r of hand.rounds) if (r.cards.player) used.push(r.cards.player);
+  // as viras também são cartas do baralho e voltam ao descarte (inclusive as que nem chegaram a virar)
+  const viras = new Set<Card>(hand.rounds.map((r) => r.vira));
+  if (hand.options.rotatingVira) for (const v of hand.houseDeck) viras.add(v);
+  used.push(...viras);
   blind.discard.push(...used);
 
   blind.lastSummary = summary;
@@ -420,6 +457,7 @@ export function computeCashout(run: RunState): CashoutLine[] {
   lines.push({ label: `Vitória no ${blind.info.name}`, amount: reward });
   const perHand = MONEY_PER_UNUSED_HAND + (hasVoucher(run, 'caderninho') ? 1 : 0);
   if (blind.handsLeft > 0) lines.push({ label: `${blind.handsLeft} mão(s) não usada(s)`, amount: blind.handsLeft * perHand });
+  if (hasVoucher(run, 'cobrador')) lines.push({ label: 'Cobrador', amount: 2 });
   const i = interest(run);
   if (i > 0) lines.push({ label: `Juros (1 a cada $${INTEREST_STEP})`, amount: i });
   for (const j of activeJokers(run, blind)) jokerDef(j).blindEnd?.(blindCtx(run, blind, lines), j);

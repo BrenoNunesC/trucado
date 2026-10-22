@@ -1,4 +1,7 @@
-// Retratos SVG anos 80 dos adversários: interior de boteco (garrafas, azulejo, neon) e um
+// Retratos SVG dos adversários em estilo de retrato pintado: close no rosto, pele modelada em
+// planos (luz quente, sombras frias azuladas), rugas e vincos, volume pintado no tecido e no
+// cabelo, joias com brilho, fundo liso com luz atrás da cabeça, a mão segurando um objeto e
+// uma faixa com o nome embaixo: interior de boteco (garrafas, azulejo, neon) e um
 // personagem montado por partes (cabelo, olhos, boca, roupa, acessórios).
 // Cada id de data/opponents.ts e data/bosses.ts tem a sua composição em ART.
 
@@ -55,7 +58,10 @@ type Extra =
   | 'pacifier'
   | 'cross'
   | 'strawHat'
-  | 'toothpick';
+  | 'toothpick'
+  | 'turban';
+
+type Prop = 'cards' | 'beer' | 'herb' | 'cigarette' | 'none';
 
 export interface Art {
   /** Cores da luz ambiente (o segundo tom tinge a parede). */
@@ -72,6 +78,8 @@ export interface Art {
   outfitStyle: Outfit;
   accent: string;
   extras?: Extra[];
+  /** O que o personagem segura na mão (padrão: um leque de cartas). */
+  prop?: Prop;
 }
 
 const SKIN = ['#f6d5b8', '#ebb98f', '#c98d5e', '#9a6340', '#6b4128'];
@@ -87,51 +95,81 @@ const STEEL: [string, string] = ['#060a14', '#8aa0c8'];
 
 export const ART: Record<string, Art> = {
   // ---------------------------------------------------------------- Pequeno / Grande
-  tonhao: { sky: BLOOD, sun: '#ffd34d', grid: '#c8453a', skin: SKIN[2], hair: '#1b1010', hairStyle: 'flat', eyes: 'angry', mouth: 'smirk', outfit: '#f3f0e4', outfitStyle: 'apron', accent: '#c8453a', extras: ['bigMustache', 'toothpick'] },
+  tonhao: { sky: BLOOD, sun: '#ffd34d', grid: '#c8453a', skin: SKIN[2], hair: '#1b1010', hairStyle: 'flat', eyes: 'angry', mouth: 'smirk', outfit: '#f3f0e4', outfitStyle: 'apron', accent: '#c8453a', extras: ['bigMustache', 'toothpick'], prop: 'beer' },
   rosana: { sky: NIGHT, sun: '#ff9ad5', grid: '#e86a9a', skin: SKIN[1], hair: '#c8641e', hairStyle: 'perm', eyes: 'normal', mouth: 'grin', outfit: '#e86a9a', outfitStyle: 'tee', accent: '#ffffff', extras: ['hoops', 'lipstick'] },
   juninho: { sky: MINT, sun: '#ff8c3a', grid: '#4a9ad8', skin: SKIN[2], hair: '#3a1a0a', hairStyle: 'flat', eyes: 'worried', mouth: 'o', outfit: '#4a9ad8', outfitStyle: 'uniform', accent: '#ffd34d', extras: ['cap', 'freckles'] },
   neide: { sky: DUSK, sun: '#ffd34d', grid: '#ff8c3a', skin: SKIN[1], hair: '#c9c9d6', hairStyle: 'bun', eyes: 'glasses', mouth: 'smile', outfit: '#7a3d8f', outfitStyle: 'robe', accent: '#ffb547', extras: ['pearls', 'wrinkles', 'blush'] },
-  marcao: { sky: GOLD, sun: '#ffd34d', grid: '#2e8a4a', skin: SKIN[3], hair: '#1a0a0a', hairStyle: 'flat', eyes: 'wink', mouth: 'grin', outfit: '#ffd34d', outfitStyle: 'jersey', accent: '#2e8a4a', extras: ['stubble', 'chain'] },
+  marcao: { sky: GOLD, sun: '#ffd34d', grid: '#2e8a4a', skin: SKIN[3], hair: '#1a0a0a', hairStyle: 'flat', eyes: 'wink', mouth: 'grin', outfit: '#ffd34d', outfitStyle: 'jersey', accent: '#2e8a4a', extras: ['stubble', 'chain'], prop: 'beer' },
   cris: { sky: ACID, sun: '#ffd34d', grid: '#5ab84a', skin: SKIN[3], hair: '#2a1408', hairStyle: 'ponytail', eyes: 'normal', mouth: 'grin', outfit: '#5ab84a', outfitStyle: 'apron', accent: '#f3f0e4', extras: ['hoops', 'blush'] },
   arlindo: { sky: STEEL, sun: '#9ad7ff', grid: '#5ad1ff', skin: SKIN[0], hair: '#8a8a8a', hairStyle: 'bald', eyes: 'glasses', mouth: 'flat', outfit: '#5a4a3a', outfitStyle: 'suit', accent: '#9ad7ff', extras: ['mustache', 'pencil'] },
   katia: { sky: MINT, sun: '#5affc8', grid: '#3ab89a', skin: SKIN[4], hair: '#140c08', hairStyle: 'bob', eyes: 'glasses', mouth: 'flat', outfit: '#2a3a4a', outfitStyle: 'suit', accent: '#3ab89a', extras: ['earring'] },
-  bene: { sky: GOLD, sun: '#ff8c3a', grid: '#ffd34d', skin: SKIN[3], hair: '#f0f0f0', hairStyle: 'flat', eyes: 'closed', mouth: 'smile', outfit: '#f3ead2', outfitStyle: 'tank', accent: '#ffd34d', extras: ['bigMustache', 'wrinkles'] },
+  bene: { sky: GOLD, sun: '#ff8c3a', grid: '#ffd34d', skin: SKIN[3], hair: '#f0f0f0', hairStyle: 'flat', eyes: 'closed', mouth: 'smile', outfit: '#f3ead2', outfitStyle: 'tank', accent: '#ffd34d', extras: ['bigMustache', 'wrinkles'], prop: 'beer' },
   lu: { sky: DUSK, sun: '#ffd34d', grid: '#e07a3a', skin: SKIN[2], hair: '#3a1a0a', hairStyle: 'asa', eyes: 'normal', mouth: 'grin', outfit: '#f3f0e4', outfitStyle: 'jersey', accent: '#1b1b26', extras: ['blush'] },
-  gringo: { sky: GOLD, sun: '#ffd34d', grid: '#d8a030', skin: SKIN[1], hair: '#3a2410', hairStyle: 'slick', eyes: 'shades', mouth: 'smirk', outfit: '#d8a030', outfitStyle: 'tee', accent: '#1b1b26', extras: ['mustache', 'toothpick'] },
-  paty: { sky: GRAPE, sun: '#b84ab8', grid: '#b84ab8', skin: SKIN[3], hair: '#e0e0e0', hairStyle: 'long', eyes: 'closed', mouth: 'smile', outfit: '#f3f0e4', outfitStyle: 'robe', accent: '#b84ab8', extras: ['scarf', 'pearls', 'cross'] },
-  zeca: { sky: GOLD, sun: '#ff5b5b', grid: '#c9a227', skin: SKIN[3], hair: '#2a1a0a', hairStyle: 'flat', eyes: 'normal', mouth: 'grin', outfit: '#3a5a8a', outfitStyle: 'uniform', accent: '#c9a227', extras: ['cap', 'stubble'] },
+  gringo: { sky: GOLD, sun: '#ffd34d', grid: '#d8a030', skin: SKIN[1], hair: '#3a2410', hairStyle: 'slick', eyes: 'shades', mouth: 'smirk', outfit: '#d8a030', outfitStyle: 'tee', accent: '#1b1b26', extras: ['mustache', 'toothpick'], prop: 'beer' },
+  paty: { sky: GRAPE, sun: '#b84ab8', grid: '#b84ab8', skin: SKIN[3], hair: '#e0e0e0', hairStyle: 'long', eyes: 'closed', mouth: 'smile', outfit: '#f3f0e4', outfitStyle: 'robe', accent: '#b84ab8', extras: ['turban', 'scarf', 'pearls', 'cross'], prop: 'herb' },
+  zeca: { sky: GOLD, sun: '#ff5b5b', grid: '#c9a227', skin: SKIN[3], hair: '#2a1a0a', hairStyle: 'flat', eyes: 'normal', mouth: 'grin', outfit: '#3a5a8a', outfitStyle: 'uniform', accent: '#c9a227', extras: ['cap', 'stubble'], prop: 'beer' },
   telma: { sky: STEEL, sun: '#6fb2ff', grid: '#6fb2ff', skin: SKIN[2], hair: '#3a1a0a', hairStyle: 'perm', eyes: 'glasses', mouth: 'flat', outfit: '#6fb2ff', outfitStyle: 'shoulder', accent: '#ffffff', extras: ['headphones', 'pearls'] },
   betinho: { sky: ACID, sun: '#ffd34d', grid: '#8ad84a', skin: SKIN[0], hair: '#e8a040', hairStyle: 'spiky', eyes: 'worried', mouth: 'o', outfit: '#2e8a4a', outfitStyle: 'jersey', accent: '#ffd34d', extras: ['freckles', 'blush'] },
 
   tiao: { sky: GOLD, sun: '#ffb547', grid: '#ff8c3a', skin: SKIN[2], hair: '#e8e8e8', hairStyle: 'bald', eyes: 'glasses', mouth: 'smile', outfit: '#7d4e26', outfitStyle: 'jacket', accent: '#ffb547', extras: ['bigMustache', 'beret', 'wrinkles'] },
+
+  cida: { sky: DUSK, sun: '#e8457a', grid: '#c86aa8', skin: SKIN[1], hair: '#c8c8d6', hairStyle: 'bun', eyes: 'glasses', mouth: 'smile', outfit: '#c86aa8', outfitStyle: 'apron', accent: '#f3efe6', extras: ['pearls', 'wrinkles', 'pencil'] },
+  jorge: { sky: MINT, sun: '#ffd34d', grid: '#4a9ab8', skin: SKIN[2], hair: '#6a4a2a', hairStyle: 'flat', eyes: 'wink', mouth: 'grin', outfit: '#4a9ab8', outfitStyle: 'tank', accent: '#e0c078', extras: ['strawHat', 'stubble'], prop: 'beer' },
+  vanessa: { sky: NIGHT, sun: '#ff5fa8', grid: '#e8457a', skin: SKIN[3], hair: '#1a0a0a', hairStyle: 'long', eyes: 'normal', mouth: 'smirk', outfit: '#e8457a', outfitStyle: 'shoulder', accent: '#ffffff', extras: ['hoops', 'lipstick'] },
+  deivid: { sky: ACID, sun: '#ff8c3a', grid: '#e0a030', skin: SKIN[2], hair: '#1a0a0a', hairStyle: 'flat', eyes: 'worried', mouth: 'o', outfit: '#e0a030', outfitStyle: 'jacket', accent: '#1b1b26', extras: ['cap', 'earring'], prop: 'cigarette' },
+  osvaldo: { sky: STEEL, sun: '#9ad7ff', grid: '#7aa0c8', skin: SKIN[3], hair: '#d8d8d8', hairStyle: 'bald', eyes: 'glasses', mouth: 'flat', outfit: '#4a5a6a', outfitStyle: 'uniform', accent: '#ffd34d', extras: ['mustache', 'wrinkles', 'badge'] },
+  comadre: { sky: GRAPE, sun: '#b84ab8', grid: '#b84ab8', skin: SKIN[3], hair: '#e0e0e0', hairStyle: 'bun', eyes: 'angry', mouth: 'frown', outfit: '#5a2a6a', outfitStyle: 'robe', accent: '#ffd34d', extras: ['turban', 'scarf', 'wrinkles', 'earring'], prop: 'herb' },
+  cobradorBoss: { sky: GOLD, sun: '#8a6a32', grid: '#8a6a32', skin: SKIN[1], hair: '#2a1a0a', hairStyle: 'slick', eyes: 'angry', mouth: 'flat', outfit: '#3a3a4a', outfitStyle: 'suit', accent: '#ffd34d', extras: ['mustache', 'chain', 'pencil'], prop: 'none' },
+  padeiro: { sky: GOLD, sun: '#ffd34d', grid: '#d8a030', skin: SKIN[0], hair: '#f0f0f0', hairStyle: 'bald', eyes: 'normal', mouth: 'grin', outfit: '#f3f0e4', outfitStyle: 'apron', accent: '#d8a030', extras: ['bigMustache', 'cap'] },
+  juizBoss: { sky: STEEL, sun: '#c8c8d6', grid: '#56676a', skin: SKIN[2], hair: '#8a8a8a', hairStyle: 'side', eyes: 'glasses', mouth: 'flat', outfit: '#1b1b26', outfitStyle: 'robe', accent: '#f3efe6', extras: ['wrinkles', 'pearls'] },
+  ciganinha: { sky: MINT, sun: '#5affc8', grid: '#3ab89a', skin: SKIN[2], hair: '#1a0a0a', hairStyle: 'long', eyes: 'wink', mouth: 'smirk', outfit: '#3ab89a', outfitStyle: 'shoulder', accent: '#ffd34d', extras: ['scarf', 'hoops', 'lipstick'] },
+  prefeito: { sky: BLOOD, sun: '#ffd34d', grid: '#4a7ad8', skin: SKIN[0], hair: '#3a2a1a', hairStyle: 'slick', eyes: 'normal', mouth: 'smile', outfit: '#1f3a6a', outfitStyle: 'suit', accent: '#ffd34d', extras: ['medal', 'stubble'] },
 
   // ---------------------------------------------------------------- chefes
   maoDeFerro: { sky: STEEL, sun: '#c0c8d8', grid: '#9aa4b1', skin: SKIN[1], hair: '#2a2a2a', hairStyle: 'flat', eyes: 'angry', mouth: 'frown', outfit: '#4a5a3a', outfitStyle: 'uniform', accent: '#ffd34d', extras: ['beret', 'medal', 'scar'] },
   caladao: { sky: DUSK, sun: '#ffd34d', grid: '#7d7d7d', skin: SKIN[2], hair: '#3a2a1a', hairStyle: 'bald', eyes: 'closed', mouth: 'flat', outfit: '#5a3a1a', outfitStyle: 'robe', accent: '#c9a227', extras: ['beard', 'cross'] },
   sorrateiro: { sky: GRAPE, sun: '#ff8c3a', grid: '#ff8c3a', skin: SKIN[2], hair: '#1a0a2a', hairStyle: 'long', eyes: 'wink', mouth: 'smirk', outfit: '#6a1a8a', outfitStyle: 'robe', accent: '#ffd34d', extras: ['scarf', 'hoops', 'lipstick'] },
   corredor: { sky: MINT, sun: '#ffb547', grid: '#5ad1ff', skin: SKIN[3], hair: '#1a0a0a', hairStyle: 'afro', eyes: 'worried', mouth: 'o', outfit: '#5ad1ff', outfitStyle: 'tracksuit', accent: '#ffffff', extras: ['headband'] },
-  benzedeira: { sky: ACID, sun: '#ff5c7a', grid: '#6fe36f', skin: SKIN[3], hair: '#e0e0e0', hairStyle: 'bun', eyes: 'closed', mouth: 'smile', outfit: '#f3ead2', outfitStyle: 'robe', accent: '#ff5c7a', extras: ['scarf', 'wrinkles', 'cross'] },
-  coronelBoss: { sky: GOLD, sun: '#ff8c3a', grid: '#c9a227', skin: SKIN[0], hair: '#d8d8d8', hairStyle: 'flat', eyes: 'angry', mouth: 'flat', outfit: '#f3ead2', outfitStyle: 'suit', accent: '#c9a227', extras: ['hat', 'bigMustache', 'cigar'] },
-  agiota: { sky: ACID, sun: '#4caf50', grid: '#4caf50', skin: SKIN[1], hair: '#101010', hairStyle: 'slick', eyes: 'glasses', mouth: 'smirk', outfit: '#1b1b26', outfitStyle: 'suit', accent: '#4caf50', extras: ['mustache', 'chain'] },
+  benzedeira: { sky: ACID, sun: '#ff5c7a', grid: '#6fe36f', skin: SKIN[3], hair: '#e0e0e0', hairStyle: 'bun', eyes: 'closed', mouth: 'smile', outfit: '#f3ead2', outfitStyle: 'robe', accent: '#ff5c7a', extras: ['turban', 'scarf', 'wrinkles', 'cross'], prop: 'herb' },
+  coronelBoss: { sky: GOLD, sun: '#ff8c3a', grid: '#c9a227', skin: SKIN[0], hair: '#d8d8d8', hairStyle: 'flat', eyes: 'angry', mouth: 'flat', outfit: '#f3ead2', outfitStyle: 'suit', accent: '#c9a227', extras: ['hat', 'bigMustache', 'cigar'], prop: 'none' },
+  agiota: { sky: ACID, sun: '#4caf50', grid: '#4caf50', skin: SKIN[1], hair: '#101010', hairStyle: 'slick', eyes: 'glasses', mouth: 'smirk', outfit: '#1b1b26', outfitStyle: 'suit', accent: '#4caf50', extras: ['mustache', 'chain'], prop: 'none' },
   cego: { sky: GOLD, sun: '#ff8c3a', grid: '#5b6a80', skin: SKIN[4], hair: '#101010', hairStyle: 'flat', eyes: 'shades', mouth: 'smile', outfit: '#7a3a1a', outfitStyle: 'jacket', accent: '#e0c078', extras: ['beard', 'strawHat'] },
   peFrio: { sky: MINT, sun: '#ffffff', grid: '#9ad7ff', skin: SKIN[0], hair: '#9a6a3a', hairStyle: 'flat', eyes: 'worried', mouth: 'frown', outfit: '#f3f0e4', outfitStyle: 'apron', accent: '#ff9ad5', extras: ['cap', 'blush'] },
   delegado: { sky: NIGHT, sun: '#3a6ea5', grid: '#3a6ea5', skin: SKIN[2], hair: '#1a1a1a', hairStyle: 'flat', eyes: 'shades', mouth: 'frown', outfit: '#1f3a6a', outfitStyle: 'uniform', accent: '#ffd34d', extras: ['cap', 'mustache', 'badge'] },
   sogra: { sky: GRAPE, sun: '#ffd34d', grid: '#b46ad1', skin: SKIN[1], hair: '#b46ad1', hairStyle: 'perm', eyes: 'angry', mouth: 'frown', outfit: '#b46ad1', outfitStyle: 'robe', accent: '#ffd34d', extras: ['pearls', 'wrinkles', 'lipstick'] },
-  valentao: { sky: BLOOD, sun: '#ffd34d', grid: '#e84a3a', skin: SKIN[3], hair: '#1a0a0a', hairStyle: 'bald', eyes: 'shades', mouth: 'flat', outfit: '#1b1b26', outfitStyle: 'suit', accent: '#e84a3a', extras: ['chain', 'stubble'] },
+  valentao: { sky: BLOOD, sun: '#ffd34d', grid: '#e84a3a', skin: SKIN[3], hair: '#1a0a0a', hairStyle: 'bald', eyes: 'shades', mouth: 'flat', outfit: '#1b1b26', outfitStyle: 'suit', accent: '#e84a3a', extras: ['chain', 'stubble'], prop: 'beer' },
   ladyLaser: { sky: NIGHT, sun: '#ffd34d', grid: '#ff3df2', skin: SKIN[1], hair: '#f0e0c0', hairStyle: 'perm', eyes: 'glasses', mouth: 'smirk', outfit: '#7a1a4a', outfitStyle: 'shoulder', accent: '#ffd34d', extras: ['pearls', 'hoops', 'lipstick'] },
   ninaK7: { sky: STEEL, sun: '#9aa4b1', grid: '#5b6a80', skin: SKIN[3], hair: '#1a1a1a', hairStyle: 'bun', eyes: 'closed', mouth: 'flat', outfit: '#1b1b26', outfitStyle: 'robe', accent: '#9aa4b1', extras: ['cross', 'wrinkles'] },
   maxCromado: { sky: ACID, sun: '#ff8c3a', grid: '#6a8a3a', skin: SKIN[2], hair: '#5a3a1a', hairStyle: 'flat', eyes: 'angry', mouth: 'flat', outfit: '#8a2a1a', outfitStyle: 'jacket', accent: '#1b1b26', extras: ['beard', 'strawHat'] },
   drPixel: { sky: MINT, sun: '#7dff6a', grid: '#7dff6a', skin: SKIN[0], hair: '#a8a8a8', hairStyle: 'side', eyes: 'glasses', mouth: 'smile', outfit: '#f3f3f3', outfitStyle: 'suit', accent: '#3a6ea5', extras: ['mustache', 'pencil'] },
-  djVinil: { sky: DUSK, sun: '#ffd34d', grid: '#2e8a4a', skin: SKIN[4], hair: '#140c08', hairStyle: 'afro', eyes: 'closed', mouth: 'grin', outfit: '#f3f0e4', outfitStyle: 'jersey', accent: '#2e8a4a', extras: ['chain'] },
+  djVinil: { sky: DUSK, sun: '#ffd34d', grid: '#2e8a4a', skin: SKIN[4], hair: '#140c08', hairStyle: 'afro', eyes: 'closed', mouth: 'grin', outfit: '#f3f0e4', outfitStyle: 'jersey', accent: '#2e8a4a', extras: ['chain'], prop: 'beer' },
   rambinho: { sky: ACID, sun: '#ff5b5b', grid: '#8bbf3a', skin: SKIN[2], hair: '#1a0a0a', hairStyle: 'flat', eyes: 'angry', mouth: 'flat', outfit: '#4a5a2a', outfitStyle: 'uniform', accent: '#ffd34d', extras: ['beret', 'mustache'] },
   capitaoFax: { sky: STEEL, sun: '#e8e2c8', grid: '#e8e2c8', skin: SKIN[0], hair: '#f0f0f0', hairStyle: 'slick', eyes: 'glasses', mouth: 'flat', outfit: '#1f3a6a', outfitStyle: 'uniform', accent: '#e8e2c8', extras: ['cap', 'beard', 'medal'] },
   babyBoom: { sky: NIGHT, sun: '#ffc4e1', grid: '#ffc4e1', skin: SKIN[1], hair: '#f5f5f5', hairStyle: 'perm', eyes: 'glasses', mouth: 'smirk', outfit: '#ffc4e1', outfitStyle: 'robe', accent: '#b46ad1', extras: ['pearls', 'wrinkles', 'lipstick'] },
-  imperador: { sky: GOLD, sun: '#ffd34d', grid: '#ff2bd6', skin: SKIN[1], hair: '#1a0a0a', hairStyle: 'slick', eyes: 'shades', mouth: 'smirk', outfit: '#1b1b26', outfitStyle: 'suit', accent: '#ffd34d', extras: ['chain', 'stubble'] },
+  imperador: { sky: GOLD, sun: '#ffd34d', grid: '#ff2bd6', skin: SKIN[1], hair: '#1a0a0a', hairStyle: 'slick', eyes: 'shades', mouth: 'smirk', outfit: '#1b1b26', outfitStyle: 'suit', accent: '#ffd34d', extras: ['chain', 'stubble'], prop: 'cigarette' },
   rainhaNeon: { sky: GOLD, sun: '#ffd34d', grid: '#2e8a4a', skin: SKIN[3], hair: '#1a0a0a', hairStyle: 'perm', eyes: 'normal', mouth: 'grin', outfit: '#2e8a4a', outfitStyle: 'shoulder', accent: '#ffd34d', extras: ['tiara', 'hoops', 'lipstick'] },
-  baraoVectra: { sky: GOLD, sun: '#ff8c3a', grid: '#ffd34d', skin: SKIN[0], hair: '#e8e8e8', hairStyle: 'flat', eyes: 'normal', mouth: 'smirk', outfit: '#f3ead2', outfitStyle: 'suit', accent: '#6a3a1a', extras: ['hat', 'monocle', 'bigMustache', 'cigar'] },
+  baraoVectra: { sky: GOLD, sun: '#ff8c3a', grid: '#ffd34d', skin: SKIN[0], hair: '#e8e8e8', hairStyle: 'flat', eyes: 'normal', mouth: 'smirk', outfit: '#f3ead2', outfitStyle: 'suit', accent: '#6a3a1a', extras: ['hat', 'monocle', 'bigMustache', 'cigar'], prop: 'none' },
 };
 
 const FALLBACK: Art = ART.bene;
+
+/** Mistura `a` com `b` na proporção `t` (0 = só a, 1 = só b). */
+function mix(a: string, b: string, t: number): string {
+  const pa = parseInt(a.slice(1), 16);
+  const pb = parseInt(b.slice(1), 16);
+  const c = (sh: number) => Math.round(((pa >> sh) & 255) * (1 - t) + ((pb >> sh) & 255) * t);
+  return '#' + ((1 << 24) | (c(16) << 16) | (c(8) << 8) | c(0)).toString(16).slice(1);
+}
+
+/** Clareia (amt > 0) ou escurece (amt < 0) uma cor #rrggbb, para sombrear sem paleta extra. */
+function shade(hex: string, amt: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = (v: number) => Math.max(0, Math.min(255, Math.round(amt >= 0 ? v + (255 - v) * amt : v * (1 + amt))));
+  const r = ch((n >> 16) & 255);
+  const g = ch((n >> 8) & 255);
+  const b = ch(n & 255);
+  return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
+}
 
 // ---------------------------------------------------------------- partes
 
@@ -219,14 +257,20 @@ function HairFront({ a }: { a: Art }) {
 function Eyes({ a }: { a: Art }) {
   const dark = '#1b1208';
   const brows = (tilt: number) => (
-    <Sym d={`M38 ${45 - tilt} L47 ${45 + tilt}`} stroke={a.hairStyle === 'bald' ? '#5a4030' : a.hair} sw={2.2} />
+    <Sym d={`M37.6 ${45.4 - tilt} Q42 ${43.2 - tilt * 0.4} 47.2 ${44.8 + tilt}`} stroke={a.hairStyle === 'bald' ? '#5a4030' : a.hair} sw={1.5} />
   );
+  const iris = shade(a.skin, -0.65);
   const pupils = (
     <>
-      <circle cx="43" cy="52" r="2.4" fill={dark} />
-      <circle cx="57" cy="52" r="2.4" fill={dark} />
-      <circle cx="43.8" cy="51.2" r="0.8" fill="#fff" />
-      <circle cx="57.8" cy="51.2" r="0.8" fill="#fff" />
+      <Sym d="M38.2 52 Q43 48.6 47.8 52 Q43 55.6 38.2 52Z" fill="#f4ecdc" stroke="#000" sw={0.6} />
+      <circle cx="43" cy="51.8" r="2.5" fill={iris} />
+      <circle cx="57" cy="51.8" r="2.5" fill={iris} />
+      <circle cx="43" cy="51.8" r="1.2" fill={dark} />
+      <circle cx="57" cy="51.8" r="1.2" fill={dark} />
+      <circle cx="44.2" cy="50.6" r="1" fill="#fff" />
+      <circle cx="58.2" cy="50.6" r="1" fill="#fff" />
+      <Sym d="M37.8 51.8 Q43 47.6 48.2 51.8" stroke={dark} sw={1.5} />
+      <Sym d="M39.5 55 Q43 57.2 46.5 55" stroke="#000" sw={0.5} />
     </>
   );
   switch (a.eyes) {
@@ -249,9 +293,10 @@ function Eyes({ a }: { a: Art }) {
         <g>
           {brows(0)}
           {pupils}
-          <circle cx="43" cy="52" r="5.5" fill="none" stroke={dark} strokeWidth="1.6" />
-          <circle cx="57" cy="52" r="5.5" fill="none" stroke={dark} strokeWidth="1.6" />
-          <path d="M48.5 52 H51.5" stroke={dark} strokeWidth="1.6" />
+          <circle cx="43" cy="52" r="5.5" fill="#fff" fillOpacity="0.08" stroke="#3a2a1e" strokeWidth="0.9" />
+          <circle cx="57" cy="52" r="5.5" fill="#fff" fillOpacity="0.08" stroke="#3a2a1e" strokeWidth="0.9" />
+          <path d="M48.5 52 H51.5" stroke="#3a2a1e" strokeWidth="0.9" />
+          <path d="M39.6 49.2 Q41 48 42.6 47.8 M53.6 49.2 Q55 48 56.6 47.8" stroke="#fff" strokeWidth="0.5" opacity="0.6" fill="none" />
         </g>
       );
     case 'closed':
@@ -265,8 +310,10 @@ function Eyes({ a }: { a: Art }) {
       return (
         <g>
           {brows(0)}
-          <circle cx="43" cy="52" r="2.4" fill={dark} />
-          <circle cx="43.8" cy="51.2" r="0.8" fill="#fff" />
+          <path d="M38.6 52 Q43 47.6 47.4 52 Q43 56 38.6 52Z" fill="#efe6d8" stroke="#000" strokeWidth="0.5" />
+          <circle cx="43" cy="51.8" r="2.6" fill={shade(a.skin, -0.65)} />
+          <circle cx="43" cy="51.8" r="1.2" fill={dark} />
+          <circle cx="43.8" cy="51" r="0.55" fill="#fff" opacity="0.85" />
           <path d="M54 52 Q57 50 60 52" stroke={dark} strokeWidth="1.8" fill="none" />
         </g>
       );
@@ -308,15 +355,15 @@ function Mouth({ a }: { a: Art }) {
         </g>
       );
     case 'flat':
-      return <path d="M45 63 H55" stroke={lip} strokeWidth="1.8" strokeLinecap="round" />;
+      return <path d="M45 63 H55" stroke={lip} strokeWidth="1.3" strokeLinecap="round" />;
     case 'smirk':
-      return <path d="M45 63 Q52 65 56 60" stroke={lip} strokeWidth="1.8" fill="none" strokeLinecap="round" />;
+      return <path d="M45 63 Q52 65 56 60" stroke={lip} strokeWidth="1.3" fill="none" strokeLinecap="round" />;
     case 'o':
       return <ellipse cx="50" cy="63" rx="2.6" ry="3.2" fill={dark} />;
     case 'frown':
-      return <path d="M44 65 Q50 60 56 65" stroke={lip} strokeWidth="1.8" fill="none" strokeLinecap="round" />;
+      return <path d="M44 65 Q50 60 56 65" stroke={lip} strokeWidth="1.3" fill="none" strokeLinecap="round" />;
     default:
-      return <path d="M44 61 Q50 67 56 61" stroke={lip} strokeWidth="1.8" fill="none" strokeLinecap="round" />;
+      return <path d="M44 61 Q50 67 56 61" stroke={lip} strokeWidth="1.3" fill="none" strokeLinecap="round" />;
   }
 }
 
@@ -444,7 +491,9 @@ function Extras({ a, front }: { a: Art; front: boolean }) {
         ))}
       </g>,
     );
-  if (has('blush')) out.push(<Sym key="bl" d="M36 59 a4 2.4 0 1 0 8 0 a4 2.4 0 1 0 -8 0" fill="#ff6b8a" />);
+  if (has('blush')) out.push(<g key="bl" opacity="0.35" style={{ filter: 'blur(0.8px)' }}>
+        <Sym d="M36 59 a4 2.4 0 1 0 8 0 a4 2.4 0 1 0 -8 0" fill="#e8607a" />
+      </g>);
   if (has('stubble')) out.push(<path key="st" d="M36 60 C38 72 44 75 50 75 C56 75 62 72 64 60 C60 68 56 69 50 69 C44 69 40 68 36 60Z" fill="#000" opacity="0.18" />);
   if (has('beard')) out.push(<path key="be" d="M33 56 C34 72 42 78 50 78 C58 78 66 72 67 56 C64 66 58 67 50 66 C42 67 36 66 33 56Z" fill={a.hair} />);
   if (has('mustache')) out.push(<path key="mu" d="M43 59.5 Q47 57 50 59 Q53 57 57 59.5 Q54 61.5 50 60.5 Q46 61.5 43 59.5Z" fill={a.hair} />);
@@ -509,6 +558,15 @@ function Extras({ a, front }: { a: Art; front: boolean }) {
         <rect x="69" y="49" width="2" height="7" rx="1" fill={acc} />
       </g>,
     );
+  if (has('turban'))
+    out.push(
+      <g key="tb">
+        <path d="M31 47 C28 30 36 16 50 15 C64 16 72 30 69 47 C64 41 58 39 50 39 C42 39 36 41 31 47Z" fill="#ece6da" />
+        <path d="M33 44 C38 30 50 24 66 30 M32 38 C40 26 56 20 67 38 M36 46 C44 36 58 34 68 44" stroke="#9aa0b8" strokeWidth="1.1" fill="none" opacity="0.7" />
+        <path d="M34 42 C40 30 50 26 62 28" stroke="#fff" strokeWidth="1.4" fill="none" opacity="0.8" />
+        <path d="M44 39 C47 34 53 34 56 39" fill="#c8c2b6" opacity="0.8" />
+      </g>,
+    );
   if (has('cap'))
     out.push(
       <g key="cp" fill={acc}>
@@ -544,10 +602,21 @@ function Extras({ a, front }: { a: Art; front: boolean }) {
   if (has('chain')) out.push(<path key="ch" d="M38 80 Q50 92 62 80" stroke="#ffd34d" strokeWidth="1.8" strokeDasharray="1.6 1.2" fill="none" />);
   if (has('pearls'))
     out.push(
-      <g key="pr" fill="#fff">
-        {[38, 42, 46, 50, 54, 58, 62].map((x, i) => (
-          <circle key={x} cx={x} cy={81 + Math.sin((i / 6) * Math.PI) * 5} r="1.4" />
-        ))}
+      <g key="pr">
+        {[0, 1, 2].map((v) =>
+          Array.from({ length: 9 + v * 2 }, (_, i) => {
+            const t = i / (8 + v * 2);
+            const x = 37 - v * 2 + t * (26 + v * 4);
+            const y = 80 + v * 3.2 + Math.sin(t * Math.PI) * (5 + v * 1.6);
+            return (
+              <g key={`${v}-${i}`}>
+                <circle cx={x} cy={y + 0.4} r={1.35 - v * 0.1} fill="#000" opacity="0.25" />
+                <circle cx={x} cy={y} r={1.3 - v * 0.1} fill="#e4e6ec" />
+                <circle cx={x - 0.4} cy={y - 0.45} r="0.45" fill="#fff" />
+              </g>
+            );
+          }),
+        )}
       </g>,
     );
   if (has('medal'))
@@ -564,6 +633,26 @@ function Extras({ a, front }: { a: Art; front: boolean }) {
 
 // ---------------------------------------------------------------- componente
 
+/**
+ * Imagens reais opcionais: coloque src/assets/portraits/<id>.png (ou jpg/webp) e o retrato
+ * do adversário passa a usar a imagem em vez do desenho em SVG.
+ */
+const PHOTOS = import.meta.glob('../../assets/portraits/*.{png,jpg,jpeg,webp}', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+}) as Record<string, string>;
+const PHOTO_BY_ID: Record<string, string> = Object.fromEntries(
+  Object.entries(PHOTOS).map(([path, url]) => [path.split('/').pop()!.replace(/.[^.]+$/, ''), url]),
+);
+
+/** Número estável por id, para variar o formato do rosto de cada personagem. */
+function seedOf(id: string): number {
+  let h = 0;
+  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return h;
+}
+
 export interface PortraitProps {
   id: string;
   size?: number;
@@ -573,37 +662,107 @@ export interface PortraitProps {
   title?: string;
 }
 
-/** Garrafas da prateleira do fundo: x, altura, cor. */
-const BOTTLES: [number, number, string][] = [
-  [5, 13, '#3f8a4a'],
-  [11, 10, '#c87a28'],
-  [17, 14, '#d8e0e8'],
-  [23, 11, '#7a2a1a'],
-  [77, 12, '#c87a28'],
-  [83, 14, '#3f8a4a'],
-  [89, 10, '#d8e0e8'],
-  [95, 13, '#5a1a6a'],
-];
-
-/** Formato do letreiro de neon atrás do personagem (varia por id). */
-function NeonSign({ id, color }: { id: string; color: string }) {
-  let h = 0;
-  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  const common = { fill: 'none', stroke: color, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
-  const shapes = [
-    <circle key="c" cx="50" cy="46" r="27" {...common} />,
-    <rect key="r" x="22" y="22" width="56" height="44" rx="10" {...common} />,
-    <path key="h" d="M50 72 C20 52 22 26 38 24 C45 23 49 28 50 32 C51 28 55 23 62 24 C78 26 80 52 50 72Z" {...common} />,
-    <path key="s" d="M50 16 L58 38 L82 38 L63 52 L70 75 L50 61 L30 75 L37 52 L18 38 L42 38Z" {...common} />,
-    <path key="d" d="M50 16 L80 46 L50 76 L20 46Z" {...common} />,
-  ];
-  const shape = shapes[h % shapes.length];
-  return (
-    <g opacity="0.45">
-      <g strokeWidth="5" opacity="0.25" style={{ filter: 'blur(2.5px)' }}>
-        {shape}
+/** Mão segurando o objeto do personagem, no canto de baixo à esquerda (fora do zoom do rosto). */
+function HandProp({ a }: { a: Art }) {
+  const prop = a.prop ?? 'cards';
+  if (prop === 'none') return null;
+  const skin = a.skin;
+  const dark = mix(shade(skin, -0.4), '#1c1f5c', 0.4);
+  const hand = (
+    <g>
+      <path d="M6 100 C6 92 9 84 14 80 C18 77 24 77 26 80 C28 83 27 88 24 91 C22 94 20 97 20 100Z" fill={skin} />
+      <path d="M14 80 C17 78 22 78 24 80 M15 84 C18 82 23 82 25 84 M15 88 C18 86 22 86 24 88" stroke={dark} strokeWidth="0.8" fill="none" opacity="0.7" />
+      <path d="M8 98 C8 90 11 84 15 81" stroke={shade(skin, 0.3)} strokeWidth="1.2" fill="none" opacity="0.6" />
+      <path d="M20 100 C21 96 24 92 26 88 C27 92 25 97 24 100Z" fill={dark} opacity="0.5" />
+    </g>
+  );
+  let obj: ReactNode = null;
+  if (prop === 'herb')
+    obj = (
+      <g stroke="#3e6a2a" strokeLinecap="round">
+        <path d="M18 80 C17 66 14 56 10 46" strokeWidth="1.2" fill="none" />
+        {[50, 56, 62, 68, 74].map((y, i) => {
+          const x = 10 + (y - 46) * 0.2;
+          return (
+            <g key={y} stroke="none">
+              <ellipse cx={x - 3} cy={y} rx="3.4" ry="1.3" fill={i % 2 ? '#6f9a4a' : '#89b25a'} transform={`rotate(-35 ${x - 3} ${y})`} />
+              <ellipse cx={x + 3} cy={y - 1.5} rx="3.2" ry="1.2" fill={i % 2 ? '#89b25a' : '#5e8a3a'} transform={`rotate(30 ${x + 3} ${y - 1.5})`} />
+            </g>
+          );
+        })}
       </g>
-      <g strokeWidth="1.6">{shape}</g>
+    );
+  if (prop === 'beer')
+    obj = (
+      <g>
+        <path d="M10 62 H26 L24 84 H12Z" fill="#e8a830" opacity="0.92" />
+        <path d="M10 62 H26 L25.5 67 H10.5Z" fill="#fff6e0" />
+        <path d="M13 67 L14 83 M17 67 L17.5 84 M21 67 L21 84" stroke="#fff" strokeOpacity="0.35" strokeWidth="0.7" />
+        <path d="M11 64 L12.6 82" stroke="#fff" strokeOpacity="0.7" strokeWidth="1" />
+      </g>
+    );
+  if (prop === 'cards')
+    obj = (
+      <g>
+        {[-22, -6, 10].map((r, i) => (
+          <g key={r} transform={`rotate(${r} 18 82)`}>
+            <rect x="12" y="60" width="12" height="18" rx="1.5" fill="#f6efdc" stroke="#3a2a1a" strokeWidth="0.5" />
+            <text x="14" y="66" fontSize="5" fontWeight="700" fill={i === 1 ? '#c8202b' : '#1b1b26'} fontFamily="serif">
+              {['4', '7', 'A'][i]}
+            </text>
+          </g>
+        ))}
+      </g>
+    );
+  if (prop === 'cigarette')
+    obj = (
+      <g>
+        <rect x="16" y="70" width="12" height="2" rx="0.8" fill="#f3efe6" transform="rotate(-30 16 70)" />
+        <circle cx="26.5" cy="64.5" r="1" fill="#ff7a2a" />
+        <path d="M27 63 C25 58 29 55 27 50" stroke="#c8d0e0" strokeWidth="0.8" fill="none" opacity="0.6" />
+      </g>
+    );
+  return (
+    <g>
+      {obj}
+      {hand}
+    </g>
+  );
+}
+
+/** Rugas, vincos e linhas de expressão (sempre um pouco; bem mais em quem tem `wrinkles`). */
+function Lines({ a, rx, ry }: { a: Art; rx: number; ry: number }) {
+  const old = a.extras?.includes('wrinkles');
+  const ink = mix(shade(a.skin, -0.55), '#151840', 0.45);
+  const hi = mix(shade(a.skin, 0.35), '#dfe8ff', 0.3);
+  return (
+    <g fill="none" strokeLinecap="round">
+      {/* vinco nariz-boca e prega da pálpebra */}
+      <g opacity="0.55">
+        <Sym d="M45.8 58.6 C44.2 60.2 43.6 62 44 63.8" stroke={ink} sw={0.5} />
+      </g>
+      <Sym d="M38.4 49.4 Q43 46.6 47.6 49.4" stroke={ink} sw={0.45} />
+      <g opacity={old ? 0.6 : 0.22}>
+        <Sym d="M39.5 55.6 Q43 57.6 46.5 55.6" stroke={ink} sw={0.5} />
+        <Sym d="M44.6 59.2 C43.4 60.8 43 62.4 43.4 64" stroke={hi} sw={0.35} />
+      </g>
+      {old && (
+        <g>
+          {/* testa */}
+          {[40, 42.4, 44.8].map((y, i) => (
+            <g key={y}>
+              <path d={`M${41 + i} ${y} Q50 ${y - 1.6} ${59 - i} ${y}`} stroke={ink} strokeWidth="0.55" opacity="0.7" />
+              <path d={`M${42 + i} ${y + 0.7} Q50 ${y - 0.9} ${58 - i} ${y + 0.7}`} stroke={hi} strokeWidth="0.4" opacity="0.5" />
+            </g>
+          ))}
+          {/* pés de galinha, olheiras e cantos da boca */}
+          <Sym d="M37.6 51 L35.4 50 M37.6 52.4 L35.2 52.6 M37.8 53.8 L35.8 55" stroke={ink} sw={0.45} />
+          <Sym d="M39.6 57 Q43 59.4 46.4 57" stroke={ink} sw={0.45} />
+          <Sym d="M44.4 64.6 Q43.8 66 44.4 67.4" stroke={ink} sw={0.4} />
+          {/* papada */}
+          <path d={`M${50 - rx * 0.5} ${52 + ry - 1} Q50 ${52 + ry + 2.4} ${50 + rx * 0.5} ${52 + ry - 1}`} stroke={ink} strokeWidth="0.5" opacity="0.6" />
+        </g>
+      )}
     </g>
   );
 }
@@ -611,9 +770,43 @@ function NeonSign({ id, color }: { id: string; color: string }) {
 export function Portrait({ id, size = 96, boss, className, title }: PortraitProps) {
   const uid = useId().replace(/:/g, '');
   const a = ART[id] ?? FALLBACK;
-  const wall = `wall${uid}`;
-  const lamp = `lamp${uid}`;
+  const photo = PHOTO_BY_ID[id];
+  const seed = seedOf(id);
+  const faceRx = 15.5 + (seed % 5) * 0.8;
+  const faceRy = 19 + ((seed >> 3) % 4) * 0.7;
   const clip = `clip${uid}`;
+  const faceClip = `fc${uid}`;
+  const skinFace = `sf${uid}`;
+  const skinNeck = `sn${uid}`;
+  const vig = `vg${uid}`;
+  const bgG = `bg${uid}`;
+  const paint = `pt${uid}`;
+  const soft = `so${uid}`;
+
+  // fundo liso de estúdio, puxado para o verde-azulado da referência e tingido pela cor do personagem
+  const bg = mix(a.grid, '#3f7f72', 0.55);
+  // sombras frias (azul-violeta) e luzes levemente frias, como na pintura de referência
+  const shadow = mix(shade(a.skin, -0.38), '#2a2f6e', 0.35);
+  const light = mix(shade(a.skin, 0.32), '#e6eeff', 0.3);
+  const warm = mix(a.skin, '#c8503c', 0.4);
+  // a faixa só aparece em retrato grande; nos pequenos o nome já fica embaixo, legível
+  const caption = title && size >= 100 ? title.toUpperCase() : null;
+  const L = 50 - faceRx;
+  const R = 50 + faceRx;
+
+  if (photo) {
+    return (
+      <img
+        className={`portrait portrait-photo ${boss ? 'portrait-boss' : ''} ${className ?? ''}`}
+        src={photo}
+        width={size}
+        height={size}
+        alt={title ?? ''}
+        draggable={false}
+        style={{ ['--pc' as string]: a.accent, objectFit: 'cover', borderRadius: 6 }}
+      />
+    );
+  }
   return (
     <svg
       className={`portrait ${boss ? 'portrait-boss' : ''} ${className ?? ''}`}
@@ -626,74 +819,141 @@ export function Portrait({ id, size = 96, boss, className, title }: PortraitProp
     >
       {title && <title>{title}</title>}
       <defs>
-        <linearGradient id={wall} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#3a160c" />
-          <stop offset="1" stopColor="#6b2a18" />
-        </linearGradient>
-        <radialGradient id={lamp} cx="0.5" cy="0" r="0.8">
-          <stop offset="0" stopColor="#ffd890" stopOpacity="0.5" />
-          <stop offset="1" stopColor="#ffd890" stopOpacity="0" />
+        <radialGradient id={bgG} cx="0.5" cy="0.36" r="0.75">
+          <stop offset="0" stopColor={mix(bg, '#e8f4e8', 0.35)} />
+          <stop offset="0.55" stopColor={bg} />
+          <stop offset="1" stopColor={shade(bg, -0.45)} />
         </radialGradient>
+        <radialGradient id={skinFace} cx="0.4" cy="0.36" r="0.78">
+          <stop offset="0" stopColor={mix(a.skin, light, 0.4)} />
+          <stop offset="0.55" stopColor={a.skin} />
+          <stop offset="0.88" stopColor={mix(a.skin, shadow, 0.4)} />
+          <stop offset="1" stopColor={mix(a.skin, shadow, 0.75)} />
+        </radialGradient>
+        <linearGradient id={skinNeck} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor={mix(a.skin, shadow, 0.35)} />
+          <stop offset="0.45" stopColor={a.skin} />
+          <stop offset="1" stopColor={shadow} />
+        </linearGradient>
+        <radialGradient id={vig} cx="0.5" cy="0.45" r="0.75">
+          <stop offset="0.6" stopColor="#000" stopOpacity="0" />
+          <stop offset="1" stopColor="#000" stopOpacity="0.45" />
+        </radialGradient>
+        {/* volume pintado: relevo a partir da silhueta borrada, luz difusa de cima à esquerda e
+            brilho especular frio; o ruído quebra as bordas como pincelada */}
+        <filter id={paint} x="-10%" y="-10%" width="120%" height="120%" colorInterpolationFilters="sRGB">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="bump" />
+          <feDiffuseLighting in="bump" surfaceScale="3.5" diffuseConstant="1.18" lightingColor="#fff" result="diff">
+            <feDistantLight azimuth="235" elevation="55" />
+          </feDiffuseLighting>
+          <feComposite in="SourceGraphic" in2="diff" operator="arithmetic" k1="1" result="lit" />
+          <feSpecularLighting in="bump" surfaceScale="3.5" specularConstant="0.5" specularExponent="16" lightingColor="#e4ecff" result="spec">
+            <feDistantLight azimuth="235" elevation="48" />
+          </feSpecularLighting>
+          <feComposite in="spec" in2="SourceAlpha" operator="in" result="specIn" />
+          <feComposite in="lit" in2="specIn" operator="arithmetic" k2="1" k3="0.8" result="shine" />
+          <feTurbulence type="fractalNoise" baseFrequency="0.12" numOctaves="2" seed="9" result="noise" />
+          <feDisplacementMap in="shine" in2="noise" scale="0.7" />
+        </filter>
+        {/* manchas de tinta macias para modelar o rosto */}
+        <filter id={soft} x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="1.5" />
+        </filter>
+        <clipPath id={faceClip}>
+          <ellipse cx="50" cy="52" rx={faceRx} ry={faceRy} />
+        </clipPath>
         <clipPath id={clip}>
           <rect width="100" height="100" rx="6" />
         </clipPath>
       </defs>
       <g clipPath={`url(#${clip})`}>
-        {/* parede do bar, tingida pela luz do neon */}
-        <rect width="100" height="100" fill={`url(#${wall})`} />
-        <rect width="100" height="100" fill={a.sky[1]} opacity="0.16" />
-        {/* prateleira com garrafas */}
-        {BOTTLES.map(([x, hgt, c]) => (
-          <g key={x} opacity="0.85">
-            <rect x={x - 2.5} y={30 - hgt} width="5" height={hgt} rx="1.5" fill={c} />
-            <rect x={x - 1} y={30 - hgt - 4} width="2" height="5" fill={c} />
-            <rect x={x - 1.6} y={30 - hgt + 3} width="1" height={hgt - 5} fill="#fff" opacity="0.3" />
-          </g>
-        ))}
-        <rect x="0" y="30" width="100" height="3" fill="#8a5a2e" />
-        <rect x="0" y="33" width="100" height="1.5" fill="#000" opacity="0.35" />
-        {/* letreiro de neon */}
-        <NeonSign id={id} color={a.sun} />
-        {/* azulejo verde e branco */}
-        <rect x="0" y="60" width="100" height="16" fill="#e9e4cf" />
-        {Array.from({ length: 13 }, (_, i) => (
-          <rect key={i} x={i * 8} y={i % 2 ? 60 : 68} width="8" height="8" fill="#2e7a5a" />
-        ))}
-        <rect x="0" y="60" width="100" height="16" fill="#000" opacity="0.4" />
-        <rect x="0" y="58.5" width="100" height="2" fill="#6b3f1c" />
-        {/* luz da lâmpada */}
-        <rect width="100" height="100" fill={`url(#${lamp})`} />
+        {/* fundo de estúdio com luz atrás da cabeça */}
+        <rect width="100" height="100" fill={`url(#${bgG})`} />
 
-        {/* personagem */}
-        <g className="portrait-figure">
-          <Extras a={a} front={false} />
-          <HairBack a={a} />
-          <Body a={a} />
-          <rect x="43" y="68" width="14" height="14" fill={a.skin} />
-          <rect x="43" y="68" width="14" height="5" fill="#000" opacity="0.15" />
-          <ellipse cx="33" cy="54" rx="3" ry="4.5" fill={a.skin} />
-          <ellipse cx="67" cy="54" rx="3" ry="4.5" fill={a.skin} />
-          <ellipse cx="50" cy="52" rx="17" ry="20" fill={a.skin} />
-          <path d="M60 36 C68 44 68 62 58 70 C64 60 64 46 60 36Z" fill="#000" opacity="0.12" />
-          <HairFront a={a} />
+        {/* personagem em close */}
+        <g className="portrait-figure" transform="translate(50 64) scale(1.45) translate(-50 -64)">
+          <g filter={`url(#${paint})`}>
+            <Extras a={a} front={false} />
+            <HairBack a={a} />
+            <Body a={a} />
+          </g>
+          {/* pescoço com sombra do queixo */}
+          <rect x="43" y="68" width="14" height="14" fill={`url(#${skinNeck})`} />
+          <ellipse cx="50" cy="70" rx="8" ry="3.5" fill={shadow} opacity="0.55" filter={`url(#${soft})`} />
+          {/* orelhas */}
+          <ellipse cx={L + 1.5} cy="54" rx="3" ry="4.5" fill={mix(a.skin, shadow, 0.2)} />
+          <ellipse cx={R - 1.5} cy="54" rx="3" ry="4.5" fill={mix(a.skin, shadow, 0.45)} />
+          <path d={`M${L + 1} 52 Q${L + 2.4} 54 ${L + 1.3} 57 M${R - 1} 52 Q${R - 2.4} 54 ${R - 1.3} 57`} stroke={shadow} strokeWidth="0.6" fill="none" />
+          {/* rosto: base + manchas de sombra e luz pintadas por cima */}
+          <ellipse cx="50" cy="52" rx={faceRx} ry={faceRy} fill={`url(#${skinFace})`} />
+          <g clipPath={`url(#${faceClip})`}>
+            <g filter={`url(#${soft})`}>
+              <g fill={shadow} opacity="0.38">
+                <ellipse cx={R - 2} cy="54" rx="6" ry="18" opacity="0.8" />
+                <ellipse cx={L + 1} cy="48" rx="3" ry="8" opacity="0.5" />
+                <ellipse cx="43" cy="51.5" rx="5.6" ry="3.4" />
+                <ellipse cx="57" cy="51.5" rx="5.6" ry="3.4" />
+                <ellipse cx="39" cy="62" rx="3" ry="4.5" opacity="0.6" />
+                <ellipse cx="61" cy="62" rx="3.2" ry="5" />
+                <ellipse cx="50" cy="60.6" rx="3.4" ry="1.2" />
+                <ellipse cx="50" cy="67.4" rx="4" ry="1.4" opacity="0.8" />
+                <rect x="30" y="34" width="40" height="7" opacity="0.6" />
+              </g>
+              <g fill={warm} opacity="0.35">
+                <ellipse cx="40" cy="60" rx="4.5" ry="3" />
+                <ellipse cx="60" cy="60" rx="4" ry="2.6" />
+                <ellipse cx="50" cy="58" rx="2" ry="1.4" />
+              </g>
+              <g fill={light} opacity="0.75">
+                <ellipse cx="47" cy="43.5" rx="7" ry="3" />
+                <rect x="48.6" y="49" width="2" height="8" rx="1" />
+                <ellipse cx="40.5" cy="57" rx="3.6" ry="1.8" />
+                <ellipse cx="58.5" cy="57.2" rx="2.4" ry="1.2" opacity="0.6" />
+                <ellipse cx="50" cy="70" rx="3" ry="1.5" />
+                <ellipse cx="50" cy="61.8" rx="2" ry="0.6" opacity="0.6" />
+              </g>
+            </g>
+            <Lines a={a} rx={faceRx} ry={faceRy} />
+            {/* nariz: asas e narinas */}
+            <path d="M47 57.6 Q46.2 59.6 48 60.2 M53 57.6 Q53.8 59.6 52 60.2" stroke={shadow} strokeWidth="0.7" fill="none" />
+            <ellipse cx="48.4" cy="59.7" rx="1" ry="0.55" fill={shadow} />
+            <ellipse cx="51.6" cy="59.7" rx="1" ry="0.55" fill={shadow} />
+            <circle cx="49.6" cy="58" r="1" fill={light} opacity="0.8" />
+          </g>
+          <g filter={`url(#${paint})`}>
+            <HairFront a={a} />
+          </g>
+          <ellipse cx="50" cy="42" rx="14" ry="2.4" fill={shadow} opacity="0.35" filter={`url(#${soft})`} />
           <Eyes a={a} />
-          <path d="M50 53 L47.5 59 L51 59.5" stroke="#000" strokeOpacity="0.3" strokeWidth="1.2" fill="none" strokeLinejoin="round" />
           <Mouth a={a} />
-          <Extras a={a} front />
-          {/* reflexo do neon no rosto */}
-          <path d="M33 46 C33 64 40 72 50 72" stroke={a.sun} strokeWidth="0.9" fill="none" opacity="0.55" />
+          <g filter={`url(#${paint})`}>
+            <Extras a={a} front />
+          </g>
         </g>
-        {/* balcão de madeira em primeiro plano, com a 600 e o copo americano */}
-        <rect x="0" y="92" width="100" height="8" fill="#6e3a16" />
-        <rect x="0" y="91" width="100" height="1.6" fill="#b8844a" />
-        <rect x="0" y="91" width="100" height="0.8" fill={a.grid} opacity="0.6" />
-        <path d="M8 92 V74 Q8 69 11 67 V60 H14 V67 Q17 69 17 74 V92Z" fill="#5a3a12" />
-        <rect x="8.5" y="78" width="8" height="7" fill="#e8d8b0" />
-        <rect x="10.5" y="58.5" width="4" height="2" fill="#c8a868" />
-        <path d="M80 80 L90 80 L89 92 L81 92Z" fill="#ffc21a" opacity="0.9" />
-        <path d="M80 80 L90 80 L89.6 83 L80.4 83Z" fill="#fff8e0" />
-        <path d="M80 80 L90 80 L89 92 L81 92Z M82 83 L82.6 91" fill="none" stroke="#fff" strokeOpacity="0.55" strokeWidth="0.6" />
+        <HandProp a={a} />
+        {/* gradação de cor fria por cima de tudo */}
+        <rect width="100" height="100" fill="#2a4a8a" opacity="0.18" style={{ mixBlendMode: 'soft-light' }} />
+        <rect width="100" height="100" fill={`url(#${vig})`} />
+        {caption && (
+          <g>
+            <rect x="0" y="88" width="100" height="12" fill="#0d1a1a" opacity="0.72" />
+            <text
+              x="50"
+              y="97.2"
+              textAnchor="middle"
+              fontSize={Math.min(9, 190 / caption.length)}
+              fontWeight="700"
+              letterSpacing="0.4"
+              fill="#f3efe6"
+              fontFamily="'Yanone Kaffeesatz', 'Arial Narrow', sans-serif"
+              {...(caption.length > 24 ? { textLength: 94, lengthAdjust: 'spacingAndGlyphs' } : {})}
+            >
+              {caption}
+            </text>
+          </g>
+        )}
       </g>
+      <rect x="0.5" y="0.5" width="99" height="99" rx="6" fill="none" stroke="#0e1a1a" strokeOpacity="0.6" strokeWidth="1" />
     </svg>
   );
 }
