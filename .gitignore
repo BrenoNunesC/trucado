@@ -3,3 +3,4 @@ dist
 *.log
 release
 server-dist
+trucado-stats.json

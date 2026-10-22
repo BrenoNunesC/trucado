@@ -307,3 +307,76 @@ describe('Duplas online', () => {
     a.ws.close();
   }, 30_000);
 });
+
+// ---------------------------------------------------------------- chat, espectadores e ranking
+
+describe('Chat, quem assiste e ranking', () => {
+  let server: Awaited<ReturnType<typeof startServer>>;
+  const port = 21000 + Math.floor(Math.random() * 1000);
+  beforeAll(async () => {
+    server = await startServer({ port, handDelayMs: 5, reconnectMs: 200, maxMsgsPerSec: 10_000 });
+  });
+  afterAll(async () => {
+    await server.close();
+  });
+
+  async function duelRoom() {
+    const a = await connect(port);
+    const b = await connect(port);
+    a.send({ t: 'create', v: PROTOCOL_VERSION, player: { name: 'Ana', avatar: 'rosana', id: 'id-da-ana-0001' }, rules: RULES });
+    const room = (await a.waitFor((m) => m.t === 'room')) as Extract<ServerMsg, { t: 'room' }>;
+    b.send({ t: 'join', v: PROTOCOL_VERSION, code: room.code, player: { name: 'Beto', avatar: 'zeca', id: 'id-do-beto-0001' } });
+    await a.waitFor((m) => m.t === 'state');
+    await b.waitFor((m) => m.t === 'state');
+    return { a, b, room };
+  }
+
+  it('chat livre: chega para todos do jeito que foi escrito', async () => {
+    const { a, b } = await duelRoom();
+    a.send({ t: 'chat', text: 'Truco, seu porra! 😂' });
+    const got = (await b.waitFor((m) => m.t === 'chat')) as Extract<ServerMsg, { t: 'chat' }>;
+    expect(got).toMatchObject({ from: 'Ana', text: 'Truco, seu porra! 😂', mine: false, spectator: false });
+    const mine = (await a.waitFor((m) => m.t === 'chat')) as Extract<ServerMsg, { t: 'chat' }>;
+    expect(mine.mine).toBe(true);
+    a.ws.close();
+    b.ws.close();
+  });
+
+  it('quem assiste vê a mesa sem as cartas de ninguém e pode conversar', async () => {
+    const { a, b, room } = await duelRoom();
+    const c = await connect(port);
+    c.send({ t: 'watch', v: PROTOCOL_VERSION, code: room.code, name: 'Cida' });
+    const w = (await c.waitFor((m) => m.t === 'watching')) as Extract<ServerMsg, { t: 'watching' }>;
+    expect(w.players).toEqual(['Ana', 'Beto']);
+    const st = (await c.waitFor((m) => m.t === 'state' && !!m.spectator)) as Extract<ServerMsg, { t: 'state' }>;
+    expect(st.view.hand.hands.player.every((x) => x.id.startsWith('x-'))).toBe(true);
+    expect(st.view.hand.hands.ai.every((x) => x.id.startsWith('x-'))).toBe(true);
+    // jogada de quem assiste é ignorada; o chat chega aos jogadores
+    c.send({ t: 'chat', text: 'tô só olhando' });
+    const got = (await a.waitFor((m) => m.t === 'chat' && m.spectator)) as Extract<ServerMsg, { t: 'chat' }>;
+    expect(got.from).toBe('Cida (assistindo)');
+    a.ws.close();
+    b.ws.close();
+    c.ws.close();
+  });
+
+  it('a partida encerrada vai para o ranking', async () => {
+    const { a, b } = await duelRoom();
+    const deadline = Date.now() + 15_000;
+    while (Date.now() < deadline && a.view()?.stage !== 'over') {
+      if (!autoMove(a)) autoMove(b);
+      await new Promise((r) => setTimeout(r, 4));
+    }
+    expect(a.view()?.stage).toBe('over');
+    await new Promise((r) => setTimeout(r, 50));
+    const res = await fetch(`http://127.0.0.1:${port}/ranking?id=id-da-ana-0001`);
+    const data = (await res.json()) as { top: { name: string; wins: number; losses: number }[]; you: { name: string } | null };
+    const ana = data.top.find((r) => r.name === 'Ana')!;
+    const beto = data.top.find((r) => r.name === 'Beto')!;
+    expect(ana.wins + beto.wins).toBeGreaterThanOrEqual(1);
+    expect(ana.wins + ana.losses).toBeGreaterThanOrEqual(1);
+    expect(data.you?.name).toBe('Ana');
+    a.ws.close();
+    b.ws.close();
+  }, 20_000);
+});

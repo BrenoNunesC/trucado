@@ -7,14 +7,15 @@ import { sfx } from '../../audio/sfx';
 import { OPPONENT_BY_ID, OPPONENTS } from '../../data/opponents';
 import { DUEL_TARGET, type DuelAction } from '../../engine/duel';
 import { actor, BET_NAMES, canBet, canPlayHidden, canRaise, responder, type BetResponse } from '../../engine/truco';
-import { onlineAct, onlineCreate, onlineEmote, onlineJoin, onlineLeave, onlineRematch, onlineResume, onlineSeat, onlineSend, onlineStart } from '../../net/client';
+import { onlineAct, onlineCreate, onlineEmote, onlineJoin, onlineLeave, onlineRematch, onlineResume, onlineSeat, onlineSend, onlineStart, onlineWatch } from '../../net/client';
+import { DuplasTable } from '../components/DuplasTable';
 import { DECKS, STAKES } from '../../data/decks';
-import { EMOTES, type RoomMode } from '../../net/protocol';
+import { EMOTES, type RankRow, type RoomMode } from '../../net/protocol';
 import { Portrait } from '../components/Portrait';
 import { HandLog } from '../components/Sidebar';
 import { Table } from '../components/Table';
 import { shake } from '../fx';
-import { getState, setSettings, update, useApp } from '../store';
+import { getState, setSettings, update, updateProfile, useApp } from '../store';
 import { DuplasGame } from './DuplasGame';
 import { Tentos } from './FreeMode';
 
@@ -28,6 +29,7 @@ export function OnlineMode() {
   }, []);
 
   if (!o || o.status === 'closed') return <OnlineSetup />;
+  if (o.spectator && o.status !== 'connecting') return <Spectate />;
   if (o.status === 'connecting') return <Waiting text="Conectando ao servidor…" />;
   if (o.mode === 'campaign') {
     if (o.status === 'reconnecting' && !o.seats && !o.camp) return <Waiting text="Conexão caiu. Tentando voltar para a sala…" />;
@@ -233,6 +235,7 @@ function DuplasOnline() {
   const offline = seats.map((s) => !!s && !s.online);
   return (
     <DuplasGame
+      online
       view={v}
       names={seats.map((s, i) => (i === 0 ? s?.info.name ?? 'Você' : s?.info.name ?? '?'))}
       avatars={seats.map((s) => s?.info.avatar ?? 'bene')}
@@ -299,7 +302,8 @@ function OnlineSetup() {
   const [code, setCode] = useState('');
   const [editUrl, setEditUrl] = useState(false);
   const name = st.onlineName.trim();
-  const player = { name: name || 'Jogador', avatar: st.onlineAvatar };
+  const player = { name: name || 'Jogador', avatar: st.onlineAvatar, id: st.playerId };
+  const [ranking, setRanking] = useState(false);
   const err = s.online?.status === 'closed' ? s.online.error : null;
 
   return (
@@ -370,8 +374,20 @@ function OnlineSetup() {
           <button className="btn primary big" disabled={code.length !== 4} onClick={() => (sfx('deal'), onlineJoin(st.serverUrl, code, player))}>
             Entrar
           </button>
+          <button className="btn" disabled={code.length !== 4} onClick={() => (sfx('click'), onlineWatch(st.serverUrl, code, player.name))} title="Ver a partida sem jogar (dá para usar o chat)">
+            Só assistir
+          </button>
         </section>
       </div>
+
+      <section className="online-card">
+        <h3>Ranking</h3>
+        <p className="muted">Vitórias no 1 contra 1 e nas duplas, Blinds e Ante na campanha em dupla. Você aparece pelo nome que usa nas salas.</p>
+        <button className="btn" onClick={() => setRanking((v) => !v)}>
+          {ranking ? 'Esconder ranking' : 'Ver ranking'}
+        </button>
+        {ranking && <Ranking url={st.serverUrl} id={st.playerId} />}
+      </section>
 
       <p className="muted online-server">
         Servidor:{' '}
@@ -452,8 +468,17 @@ function OnlineTable() {
     seen.current = { hand: v.handNo, log: h.log.length, opp: h.hands.ai.length };
   }, [v.handNo, h.log.length, h.hands.ai.length, h.log, h.hands.ai]);
 
+  const wasOver = useRef(v.stage === 'over');
   useEffect(() => {
-    if (v.stage === 'over') sfx(v.winner === 'player' ? 'victory' : 'gameOver');
+    const over = v.stage === 'over';
+    if (over && !wasOver.current) {
+      sfx(v.winner === 'player' ? 'victory' : 'gameOver');
+      updateProfile((x) => {
+        if (v.winner === 'player') x.onlineWins = (x.onlineWins ?? 0) + 1;
+        else x.onlineLosses = (x.onlineLosses ?? 0) + 1;
+      });
+    }
+    wasOver.current = over;
   }, [v.stage, v.winner]);
 
   // uma ação por vez: até o servidor mandar a mesa nova, cliques extras são ignorados
@@ -622,6 +647,149 @@ function OnlineTable() {
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Ranking online: busca no servidor (o mesmo endereço do WebSocket, por HTTP). */
+function Ranking({ url, id }: { url: string; id: string }) {
+  const [data, setData] = useState<{ top: RankRow[]; you: RankRow | null } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    const http = url.replace(/^ws/, 'http').replace(/\/$/, '');
+    fetch(`${http}/ranking?id=${encodeURIComponent(id)}`)
+      .then((r) => r.json())
+      .then(setData)
+      .catch(() => setErr(`Não foi possível falar com o servidor (${url}).`));
+  }, [url, id]);
+  if (err) return <p className="online-error">{err}</p>;
+  if (!data) return <p className="online-spinner">Buscando o ranking…</p>;
+  if (data.top.length === 0) return <p className="muted">Ninguém no ranking ainda. Jogue uma partida online!</p>;
+  const row = (r: RankRow, me: boolean) => (
+    <tr key={`${r.pos}-${me}`} className={me ? 'rank-me' : ''}>
+      <td>{r.pos}º</td>
+      <td>{r.name}</td>
+      <td>
+        <b>{r.points}</b>
+      </td>
+      <td>
+        {r.wins}/{r.losses}
+      </td>
+      <td>{r.campBlinds}</td>
+      <td>{r.campBestAnte || '—'}</td>
+      <td>{r.campVictories}</td>
+    </tr>
+  );
+  const youInTop = data.you && data.top.some((r) => r.pos === data.you!.pos);
+  return (
+    <table className="rank-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Jogador</th>
+          <th>Pontos</th>
+          <th>V/D</th>
+          <th>Blinds</th>
+          <th>Ante</th>
+          <th>Campanhas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.top.map((r) => row(r, !!data.you && r.pos === data.you.pos))}
+        {data.you && !youInTop && row(data.you, true)}
+      </tbody>
+    </table>
+  );
+}
+
+/** Assistindo uma sala: a mesa sem as cartas de ninguém, os placares e o chat. */
+function Spectate() {
+  const s = useApp();
+  const o = s.online!;
+  const leave = () => (onlineLeave(), update((x) => (x.screen = 'title')));
+  const top = (
+    <>
+      <span className="online-room">
+        Assistindo · Sala {o.code} · {MODE_NAME[o.mode ?? 'duel']}
+      </span>
+      <button className="btn small" onClick={leave}>
+        Sair
+      </button>
+    </>
+  );
+  if (o.mode === 'duel' && o.view && o.you && o.opp) {
+    const v = o.view;
+    return (
+      <div className="free-mode online-mode spectate">
+        <div className="scoreboard">
+          <div>
+            <span>{o.you.info.name}</span> <b>{v.score.player}</b> <Tentos n={v.score.player} />
+          </div>
+          <div>
+            <span>{o.opp.info.name}</span> <b>{v.score.ai}</b> <Tentos n={v.score.ai} />
+          </div>
+          {top}
+        </div>
+        <div className="table-wrap">
+          <Table hand={v.hand} opponentName={o.opp.info.name} portraitId={o.opp.info.avatar} selected={[]} canPlay={false} speech={null} />
+          <HandLog log={v.hand.log} />
+        </div>
+        <div className="controls">
+          <span className="hint muted">
+            {v.stage === 'over' ? `Fim: ${v.winner === 'player' ? o.you.info.name : o.opp.info.name} venceu.` : `Embaixo: ${o.you.info.name}. Ninguém vê as cartas de ninguém.`}
+          </span>
+        </div>
+      </div>
+    );
+  }
+  if ((o.mode === 'duplas' || o.mode === 'coop') && o.dview && o.seats) {
+    const seats = o.seats;
+    return (
+      <DuplasGame
+        view={o.dview}
+        names={seats.map((x) => x?.info.name ?? '?')}
+        avatars={seats.map((x) => x?.info.avatar ?? 'bene')}
+        offline={seats.map((x) => !!x && !x.online)}
+        speech={o.dspeech ?? null}
+        onAct={() => {}}
+        readOnly
+        topRight={top}
+      />
+    );
+  }
+  const t = o.camp?.table;
+  if (o.mode === 'campaign' && o.camp && t?.hand) {
+    const c = o.camp;
+    return (
+      <div className="free-mode spectate">
+        <div className="scoreboard">
+          <div>
+            <span>
+              Ante {c.ante} · {c.blinds[c.blindIndex]?.name}
+            </span>{' '}
+            <b>
+              {c.score.mine + c.score.partner} / {c.score.target}
+            </b>
+          </div>
+          {top}
+        </div>
+        <div className="table-wrap">
+          <DuplasTable hand={t.hand} names={t.seats.map((x) => x.name)} avatars={t.seats.map((x) => x.avatar)} hideVira={t.hideVira} canPlay={false} />
+          <HandLog log={t.hand.log} />
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="free-setup online-wait">
+      <h2 className="screen-title">Assistindo a sala {o.code}</h2>
+      <p>
+        {MODE_NAME[o.mode ?? 'duel']} · Na sala: {o.players?.join(', ') || 'ninguém ainda'}
+      </p>
+      <p className="online-spinner">{o.mode === 'campaign' && o.camp ? 'A dupla está na loja ou escolhendo o Blind…' : 'Esperando a partida começar…'}</p>
+      <button className="btn" onClick={leave}>
+        Sair
+      </button>
     </div>
   );
 }

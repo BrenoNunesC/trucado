@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { sfx } from '../audio/sfx';
 import { BOSS_BY_ID } from '../data/bosses';
+import { ChatDock } from './components/ChatDock';
+import { MusicWidget } from './components/MusicWidget';
 import { Sidebar } from './components/Sidebar';
 import { hideTip, TipLayer } from './components/Tip';
 import { BlindSelect } from './screens/BlindSelect';
@@ -112,6 +114,8 @@ export function App() {
         {s.screen === 'settings' && <SettingsScreen />}
       </div>
       <Modals />
+      <ChatDock />
+      <MusicWidget />
       <div className="toasts" aria-live="polite">
         {s.toasts.map((t) => (
           <div key={t.id} className={`toast toast-${t.kind}`}>

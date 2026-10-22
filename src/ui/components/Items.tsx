@@ -7,6 +7,7 @@ import { JOKER_BY_ID, RARITY_NAME } from '../../data/jokers';
 import { EDITION_NAME } from '../../engine/cards';
 import { moveJoker, sellConsumable, sellJoker, sellValue, applyConsumable } from '../../engine/inventory';
 import type { JokerEdition, JokerInstance } from '../../engine/state';
+import { campGiveJoker } from '../campaignOnline';
 import { act, getState, toast, update, useApp } from '../store';
 import { Rich } from '../text';
 import { Tip } from './Tip';
@@ -200,6 +201,18 @@ export function InventoryBar({ busy }: { busy?: boolean }) {
                     >
                       Vender ${sellValue(j)}
                     </button>
+                    {run.coop?.online && run.phase === 'shop' && !s.online?.camp?.partner.bot && (
+                      <button
+                        className="btn tiny"
+                        title="Passa este Coringa para a run do seu parceiro"
+                        onClick={() => {
+                          campGiveJoker(j.uid);
+                          update((st) => (st.selectedJoker = null));
+                        }}
+                      >
+                        Dar para {s.online?.camp?.partner.name ?? 'o parceiro'}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

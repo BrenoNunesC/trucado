@@ -6,7 +6,9 @@ import { nextHand } from '../engine/blind';
 import type { CampView } from '../engine/campaign';
 import type { HandSummary } from '../engine/state';
 import { applyCampaign, bluffOnline, cardsMessage, createCampaignRun, scoreOnline, type CampEffects } from '../net/campaignRun';
-import { onlineSend, setCampaignHandler } from '../net/client';
+import { JOKER_BY_ID } from '../data/jokers';
+import { newUid } from '../engine/inventory';
+import { onlineGift, onlineSend, setCampaignHandler, setGiftHandler } from '../net/client';
 import { loadOnlineRun } from './persist';
 import { startScoreAnim } from './scoreRunner';
 import { afterScore } from './screens/BlindView';
@@ -59,6 +61,40 @@ function score(view: CampView, before: number): void {
 }
 
 setCampaignHandler(handle);
+
+/**
+ * Coringa que o parceiro te deu na loja. Sem espaço, ele volta para quem deu; se for um seu que
+ * voltou, abre um espaço a mais (Coringa nenhum some no caminho).
+ */
+setGiftHandler((from, joker, returned) => {
+  const run = getState().run;
+  if (!run?.coop?.online || !JOKER_BY_ID[joker.id]) return;
+  const name = JOKER_BY_ID[joker.id].name;
+  const fits = run.jokers.length < run.jokerSlots;
+  if (!fits && !returned) {
+    onlineGift(joker);
+    toast(`${from} te deu ${name}, mas você não tem espaço: devolvido.`, 'bad');
+    return;
+  }
+  act((r) => {
+    if (r.jokers.length >= r.jokerSlots) r.jokerSlots += 1;
+    r.jokers.push({ uid: newUid(r, 'j'), id: joker.id, edition: joker.edition, state: { ...joker.state }, cost: joker.cost });
+    if (!r.seenJokers.includes(joker.id)) r.seenJokers.push(joker.id);
+  });
+  sfx('buy');
+  toast(returned ? `${name} voltou para você.` : `${from} te deu ${name}!`, 'good');
+});
+
+/** Dá um Coringa seu para o parceiro (na loja). Ele sai da sua run na hora. */
+export function campGiveJoker(uid: string): void {
+  const run = getState().run;
+  const j = run?.jokers.find((x) => x.uid === uid);
+  if (!run?.coop?.online || run.phase !== 'shop' || !j) return;
+  act((r) => (r.jokers = r.jokers.filter((x) => x.uid !== uid)));
+  onlineGift({ id: j.id, edition: j.edition, state: { ...j.state }, cost: j.cost });
+  sfx('coin');
+  toast(`${JOKER_BY_ID[j.id].name} foi para o seu parceiro.`, 'info');
+}
 
 // ---------------------------------------------------------------- ações da tela
 

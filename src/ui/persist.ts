@@ -2,6 +2,9 @@
 
 import type { RunState } from '../engine/state';
 
+export type TableTheme = 'itaipava' | 'sinuca' | 'quintal';
+export type TableThemeSetting = TableTheme | 'auto';
+
 const KEY_RUN = 'trucado.run.v1';
 const KEY_PROFILE = 'trucado.profile.v1';
 const KEY_SETTINGS = 'trucado.settings.v1';
@@ -10,6 +13,8 @@ export interface Settings {
   volume: number;
   muted: boolean;
   crt: boolean;
+  /** Cenário da mesa; "auto" troca sozinho (sinuca nos chefes, churrasco no Ante 8). */
+  tableTheme: TableThemeSetting;
   /** 1 = normal, 2 = rápida, 3 = turbo */
   speed: 1 | 2 | 3;
   screenShake: boolean;
@@ -23,12 +28,18 @@ export interface Settings {
   /** Nome e personagem usados nas salas online. */
   onlineName: string;
   onlineAvatar: string;
+  /** Identidade fixa neste aparelho (ranking e perfil online). Gerada na primeira vez. */
+  playerId: string;
+  /** Volume da música (separado dos efeitos). */
+  musicVolume: number;
+  musicOn: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   volume: 0.6,
   muted: false,
   crt: true,
+  tableTheme: 'auto',
   speed: 1,
   screenShake: true,
   reducedMotion: false,
@@ -40,6 +51,9 @@ export const DEFAULT_SETTINGS: Settings = {
   serverUrl: import.meta.env.VITE_TRUCADO_SERVER ?? 'ws://localhost:8787',
   onlineName: '',
   onlineAvatar: 'bene',
+  playerId: '',
+  musicVolume: 0.5,
+  musicOn: true,
 };
 
 export interface Profile {
@@ -55,6 +69,11 @@ export interface Profile {
   freeLosses: number;
   /** Modo administrador: tudo desbloqueado e o painel do administrador no Menu. */
   admin?: boolean;
+  /** Conquistas já feitas (ids). */
+  achievements?: string[];
+  duplasWins?: number;
+  onlineWins?: number;
+  onlineLosses?: number;
 }
 
 export const DEFAULT_PROFILE: Profile = {
@@ -87,7 +106,14 @@ function write(key: string, value: unknown): void {
   }
 }
 
-export const loadSettings = (): Settings => ({ ...DEFAULT_SETTINGS, ...read<Partial<Settings>>(KEY_SETTINGS) });
+export function loadSettings(): Settings {
+  const s: Settings = { ...DEFAULT_SETTINGS, ...read<Partial<Settings>>(KEY_SETTINGS) };
+  if (!s.playerId) {
+    s.playerId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `p-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+    write(KEY_SETTINGS, s);
+  }
+  return s;
+}
 export const saveSettings = (s: Settings) => write(KEY_SETTINGS, s);
 export const loadProfile = (): Profile => ({ ...DEFAULT_PROFILE, ...read<Partial<Profile>>(KEY_PROFILE) });
 export const saveProfile = (p: Profile) => write(KEY_PROFILE, p);

@@ -17,7 +17,7 @@ import type { Card, Rank } from '../../engine/cards';
 import { CardView } from './CardView';
 import { ART } from './Portrait';
 
-export type Gesture = 'throw' | 'slam' | 'tap' | 'fold' | null;
+export type Gesture = 'throw' | 'slam' | 'tap' | 'fold' | 'cheer' | null;
 
 export interface OpponentSeatProps {
   id: string;

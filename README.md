@@ -13,14 +13,29 @@ O `npm run dist` (veja Desenvolvimento) gera dois executáveis em `release/`:
 
 | Arquivo | Para quê |
 | --- | --- |
-| `Trucado-Instalador-0.2.0.exe` | instala no computador, com atalho na área de trabalho e no menu Iniciar |
-| `Trucado-0.2.0-portatil.exe` | roda direto, sem instalar (dá para levar num pendrive) |
+| `Trucado-Instalador-0.3.0.exe` | instala no computador, com atalho na área de trabalho e no menu Iniciar |
+| `Trucado-0.3.0-portatil.exe` | roda direto, sem instalar (dá para levar num pendrive) |
 
 O Windows pode mostrar o aviso "O Windows protegeu o computador" porque o executável não tem
 assinatura digital: clique em **Mais informações → Executar assim mesmo**.
 
-`F11` alterna a tela cheia. O progresso (run em andamento, recordes, coleção) fica salvo no
-computador, na pasta de dados do Trucado.
+`F11` alterna a tela cheia. O progresso (run em andamento, recordes, coleção, conquistas) fica
+salvo no computador, na pasta de dados do Trucado.
+
+O jogo instalado se atualiza sozinho: ao abrir, procura uma versão nova no GitHub Releases, baixa
+em segundo plano e pergunta se pode reiniciar. A versão portátil não se atualiza.
+
+### Música
+
+O jogo não traz música: a trilha é a sua. Coloque arquivos de áudio (MP3, OGG, M4A, FLAC…) na
+pasta **MúsicasTrucado** (Configurações → Música → *Abrir pasta das músicas*) e eles tocam em
+ordem aleatória durante o jogo. Nomeie como `Artista - Música.mp3` para o tocador (canto de baixo
+à esquerda) mostrar artista e música. No navegador, o tocador pede para escolher os arquivos.
+
+### Cenários
+
+A mesa muda sozinha: mesa de bar de plástico nos Blinds comuns, mesa de sinuca nos chefes e o
+churrasco no quintal no Ante 8. Dá para fixar um cenário em Configurações → Vídeo.
 
 ## Desenvolvimento
 
@@ -31,6 +46,33 @@ npm install
 npm run app        # compila e abre o jogo numa janela
 npm run dist       # gera o instalador e a versão portátil em release/
 ```
+
+### Publicar uma versão
+
+1. Suba a versão em `package.json` (ex.: `0.3.0`), faça o commit e o push.
+2. No GitHub: **Actions → Publicar versão → Run workflow**. Ele gera o instalador no Windows e
+   cria um *rascunho* de release com o instalador, a versão portátil, o `latest.yml` e o
+   `.blockmap` (é o que a atualização automática lê).
+3. Abra o rascunho em **Releases**, escreva as novidades e publique. Quem tem o jogo instalado
+   recebe a atualização na próxima vez que abrir.
+
+Pelo seu computador também dá: `GH_TOKEN=<token com acesso ao repositório> npm run release`.
+
+### Versão de navegador (itch.io / GitHub Pages)
+
+O build em `dist/` roda em qualquer hospedagem de site estático (os caminhos são relativos).
+
+- **itch.io:** `npm run dist:web` gera `release/Trucado-web.zip`. No itch.io, crie um projeto
+  do tipo *HTML*, envie o zip e marque *This file will be played in the browser*.
+- **GitHub Pages:** em Settings → Pages, escolha *Source: GitHub Actions*; depois
+  **Actions → Publicar no Pages → Run workflow**.
+
+No navegador o progresso fica no armazenamento do site, a música vem de arquivos escolhidos na
+hora e não há atualização automática (a página já é sempre a última publicada). Para jogar
+online pelo navegador, o servidor precisa estar em `wss://` (sites `https` não abrem `ws://`).
+
+> **Antes de distribuir:** a mesa e a garrafa usam nomes de marcas registradas (em `BRAND`, no
+> começo de `src/ui/components/TableDecor.tsx`). Troque por nomes inventados se for publicar.
 
 Outros comandos:
 
@@ -44,6 +86,8 @@ Outros comandos:
 | `npm run simulate` | simula 1000 runs com uma IA jogadora e mostra a taxa de vitória por Ante |
 | `npm run server` | servidor online local (porta 8787), para testar o modo online |
 | `npm run server:build` / `server:start` | empacota o servidor em `server-dist/` e o roda (é o que a hospedagem usa) |
+| `npm run release` | gera o instalador e publica um rascunho de release no GitHub (precisa de `GH_TOKEN`) |
+| `npm run dist:web` | versão de navegador zipada em `release/Trucado-web.zip` (para o itch.io) |
 | `npm run retratos` | gera os retratos realistas pela API de imagem (veja `scripts/retratos/`) |
 
 `npm run simulate -- --runs 300 --deck sujo --stake 3` muda quantidade, deck e stake.
@@ -194,6 +238,15 @@ Quem manda na partida é o servidor (`server/`): ele valida cada jogada e manda 
 só a própria visão da mesa, então ninguém vê as cartas dos outros (nem as próprias na Mão de
 Ferro, que é às cegas). Se a conexão cair, o jogo volta sozinho para a sala; quem ficar mais de 1
 minuto e meio fora perde por abandono no 1 contra 1, e nas duplas a IA assume o lugar.
+
+Em todas as salas tem **chat** (canto de baixo à direita, sem filtro de palavras) e dá para
+**só assistir** uma sala pelo código: quem assiste vê a mesa sem a mão de ninguém e pode
+conversar no chat. Na campanha em dupla, na loja, o botão **Dar para o parceiro** em cada Coringa
+manda o Coringa para a run do parceiro (se ele não tiver espaço, volta para você).
+
+O servidor guarda um **ranking** (vitórias no 1 contra 1 e nas duplas, Blinds e Antes da
+campanha em dupla) em `trucado-stats.json` (ou no arquivo de `TRUCADO_STATS`). Ele aparece na
+tela do online e em `GET /ranking`. Cada jogo tem um id próprio, gerado na primeira vez.
 
 Offline, **Duplas contra a máquina** no menu põe você e um parceiro da IA contra uma dupla da IA.
 

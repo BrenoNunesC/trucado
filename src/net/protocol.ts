@@ -5,9 +5,10 @@ import type { CampView, TableRules } from '../engine/campaign';
 import type { Card } from '../engine/cards';
 import type { DuelAction, DuelRules, DuelView } from '../engine/duel';
 import type { DuplasAction, DuplasView } from '../engine/duplas';
+import type { JokerEdition } from '../engine/state';
 import type { Side } from '../engine/truco';
 
-export const PROTOCOL_VERSION = 3;
+export const PROTOCOL_VERSION = 4;
 
 /**
  * Tipos de sala: 1 contra 1; duplas 2 contra 2 (a IA completa os lugares vazios); dupla contra a
@@ -20,6 +21,28 @@ export interface PlayerInfo {
   name: string;
   /** id do personagem (data/opponents.ts): roupa e mãos do jogador na mesa dos outros. */
   avatar: string;
+  /** Identidade fixa do jogador neste aparelho (para o ranking e o perfil online). */
+  id?: string;
+}
+
+/** Coringa dado ao parceiro na loja da campanha em dupla. */
+export interface GiftJoker {
+  id: string;
+  edition?: JokerEdition;
+  state: Record<string, number>;
+  cost: number;
+}
+
+/** Uma linha do ranking online. */
+export interface RankRow {
+  pos: number;
+  name: string;
+  points: number;
+  wins: number;
+  losses: number;
+  campBlinds: number;
+  campBestAnte: number;
+  campVictories: number;
 }
 
 /** Frases prontas (o servidor só repassa o número, então ninguém manda texto livre). */
@@ -48,6 +71,12 @@ export type ClientMsg =
   /** Campanha: saiu da loja (o próximo Blind começa quando os dois saírem). */
   | { t: 'cshopdone' }
   | { t: 'emote'; id: number }
+  /** Chat livre da sala (jogadores e espectadores). */
+  | { t: 'chat'; text: string }
+  /** Assistir uma sala pelo código, sem jogar. */
+  | { t: 'watch'; v: number; code: string; name: string }
+  /** Campanha: dá um Coringa para o parceiro (na loja). */
+  | { t: 'cgift'; joker: GiftJoker }
   | { t: 'rematch' }
   | { t: 'leave' };
 
@@ -65,15 +94,20 @@ export type ServerMsg =
   | { t: 'room'; code: string; token: string; seat: Side | number; mode: RoomMode }
   /** 1 contra 1: sala esperando o segundo jogador. */
   | { t: 'lobby'; code: string; you: Seat; opp: Seat | null; rules: DuelRules }
-  | { t: 'state'; code: string; view: DuelView; you: Seat; opp: Seat; rematch: { you: boolean; opp: boolean } }
+  | { t: 'state'; code: string; view: DuelView; you: Seat; opp: Seat; rematch: { you: boolean; opp: boolean }; spectator?: boolean }
   /**
    * Duplas: sala de espera. `seats` vem girado como a mesa (0 = você, 2 = parceiro); null =
    * lugar vazio (vira IA ao começar). `locked` = lugares da máquina no modo dupla contra a máquina.
    */
   | { t: 'dlobby'; code: string; mode: RoomMode; seats: (Seat | null)[]; host: boolean; locked: boolean[]; rules: DuelRules }
-  | { t: 'dstate'; code: string; mode: RoomMode; view: DuplasView; seats: Seat[]; rematch: { you: boolean; waiting: number } }
-  /** Campanha em dupla: o estado compartilhado, visto deste jogador. */
-  | { t: 'cstate'; code: string; view: CampView }
+  | { t: 'dstate'; code: string; mode: RoomMode; view: DuplasView; seats: Seat[]; rematch: { you: boolean; waiting: number }; spectator?: boolean }
+  /** Campanha em dupla: o estado compartilhado, visto deste jogador (ou de quem assiste). */
+  | { t: 'cstate'; code: string; view: CampView; spectator?: boolean }
+  /** Você está assistindo esta sala (os estados chegam com `spectator`). */
+  | { t: 'watching'; code: string; mode: RoomMode; players: string[] }
+  | { t: 'chat'; from: string; text: string; mine: boolean; spectator: boolean }
+  /** Campanha: um Coringa que o parceiro te deu (ou o seu, devolvido se não deu para entregar). */
+  | { t: 'cgift'; from: string; joker: GiftJoker; returned?: boolean }
   /** Frase rápida. `seat` é o lugar de quem mandou, girado como a mesa de quem recebe (duplas). */
   | { t: 'emote'; from: 'you' | 'opp'; id: number; seat?: number }
   | { t: 'error'; msg: string; fatal?: boolean };

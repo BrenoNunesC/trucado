@@ -27,6 +27,8 @@ interface Player {
   selected: string;
   /** Estado da mesa em que já agiu (para não repetir a jogada). */
   acted: string;
+  /** Coringas recebidos do parceiro. */
+  gifts: string[];
   send: (m: ClientMsg) => void;
 }
 
@@ -34,10 +36,11 @@ interface Player {
 function player(port: number, name: string, deckId: string): Promise<Player> {
   return new Promise((resolve) => {
     const ws = new WebSocket(`ws://127.0.0.1:${port}`);
-    const p: Player = { ws, run: null, code: '', errors: [], timeline: [], blindsWon: 0, handsScored: 0, last: null, selected: '', acted: '', send: (m) => ws.send(JSON.stringify(m)) };
+    const p: Player = { ws, run: null, code: '', errors: [], timeline: [], blindsWon: 0, handsScored: 0, last: null, selected: '', acted: '', gifts: [], send: (m) => ws.send(JSON.stringify(m)) };
 
     const handle = (msg: ServerMsg) => {
       if (msg.t === 'room') p.code = msg.code;
+      if (msg.t === 'cgift') p.gifts.push(`${msg.from}:${msg.joker.id}`);
       if (msg.t === 'error' && !msg.msg.includes('inválida')) p.errors.push(`erro: ${msg.msg}`);
       if (msg.t === 'error') {
         const h = p.last?.view.table?.hand;
@@ -93,6 +96,8 @@ function player(port: number, name: string, deckId: string): Promise<Player> {
       if (fx.blindWon) {
         p.blindsWon++;
         collectCashout(run);
+        // na primeira loja, a Ana dá um Coringa para o Beto
+        if (run.phase === 'shop' && name === 'Ana' && p.blindsWon === 1) p.send({ t: 'cgift', joker: { id: 'cafezinho', state: {}, cost: 4 } });
         if (run.phase === 'shop') p.send({ t: 'cshopdone' });
       }
     };
@@ -140,6 +145,7 @@ describe('Campanha em dupla online', () => {
     expect(b.handsScored).toBe(a.handsScored);
     // os dois vencem juntos e ficam no mesmo Ante
     expect(b.blindsWon).toBe(a.blindsWon);
+    if (a.blindsWon > 0) expect(b.gifts).toContain('Ana:cafezinho');
     expect(b.run!.ante).toBe(a.run!.ante);
     if (a.blindsWon > 0) expect(a.run!.stats.blindsDefeated).toBe(a.blindsWon);
     // nenhuma carta da casa entrou nos baralhos

@@ -1,6 +1,8 @@
 // Título, nova run, configurações e coleção.
 
 import { useState } from 'react';
+import { ACHIEVEMENTS } from '../../data/achievements';
+import { hasMusicFolder, openMusicFolder, refreshMusic, useMusic } from '../../audio/music';
 import { sfx } from '../../audio/sfx';
 import { BOSSES } from '../../data/bosses';
 import { DECKS, STAKES } from '../../data/decks';
@@ -234,6 +236,43 @@ function Toggle({ label, value, onChange, hint }: { label: string; value: boolea
   );
 }
 
+/** Trilha: liga/desliga, volume e onde ficam as músicas. */
+function MusicSettings() {
+  const st = useApp().settings;
+  const m = useMusic();
+  return (
+    <section>
+      <h3>Música</h3>
+      <Toggle label="Tocar a trilha" hint="Toca as suas músicas durante o jogo (o tocador fica no canto de baixo à esquerda)." value={st.musicOn} onChange={(v) => setSettings({ musicOn: v })} />
+      <label className="slider">
+        Volume da música
+        <input type="range" min={0} max={1} step={0.05} value={st.musicVolume} onChange={(e) => setSettings({ musicVolume: Number(e.target.value) })} />
+        <span>{Math.round(st.musicVolume * 100)}%</span>
+      </label>
+      {hasMusicFolder() ? (
+        <>
+          <p className="muted">
+            Coloque arquivos de música (MP3, OGG, M4A, FLAC…) na pasta abaixo. Nomeie como "Artista - Música.mp3" para o tocador mostrar certinho. {m.tracks.length} faixa(s) encontrada(s).
+          </p>
+          <p className="music-folder">
+            <code>{m.folder ?? 'Músicas\\Trucado'}</code>
+          </p>
+          <div className="row">
+            <button className="btn" onClick={openMusicFolder}>
+              Abrir pasta das músicas
+            </button>
+            <button className="btn" onClick={() => void refreshMusic()}>
+              Recarregar lista
+            </button>
+          </div>
+        </>
+      ) : (
+        <p className="muted">No navegador, use o tocador (canto de baixo à esquerda) para escolher as músicas do seu computador.</p>
+      )}
+    </section>
+  );
+}
+
 export function SettingsScreen() {
   const s = useApp();
   const st = s.settings;
@@ -249,8 +288,24 @@ export function SettingsScreen() {
         </label>
         <Toggle label="Mudo" value={st.muted} onChange={(v) => setSettings({ muted: v })} />
       </section>
+      <MusicSettings />
       <section>
         <h3>Vídeo e acessibilidade</h3>
+        <div className="speed">
+          Cenário da mesa:
+          {(
+            [
+              ['auto', 'Automático'],
+              ['itaipava', 'Mesa de bar'],
+              ['sinuca', 'Sinuca'],
+              ['quintal', 'Churrasco'],
+            ] as const
+          ).map(([v, label]) => (
+            <button key={v} className={`btn small ${st.tableTheme === v ? 'primary' : ''}`} title={v === 'auto' ? 'Mesa de bar; sinuca nos chefes; churrasco no Ante 8.' : undefined} onClick={() => setSettings({ tableTheme: v })}>
+              {label}
+            </button>
+          ))}
+        </div>
         <Toggle label="Efeito CRT (scanlines e vinheta)" value={st.crt} onChange={(v) => setSettings({ crt: v })} />
         <Toggle label="Tremor de tela" value={st.screenShake} onChange={(v) => setSettings({ screenShake: v })} />
         <Toggle label="Reduzir movimento" hint="Desliga partículas, inclinação e animações fortes." value={st.reducedMotion} onChange={(v) => setSettings({ reducedMotion: v })} />
@@ -301,6 +356,7 @@ export function SettingsScreen() {
 export function Collection() {
   const s = useApp();
   const found = new Set(s.profile.discoveredJokers);
+  const done = new Set(s.profile.achievements ?? []);
   const rarities = ['comum', 'incomum', 'raro', 'lendario'] as const;
   return (
     <div className="collection">
@@ -327,6 +383,30 @@ export function Collection() {
           </div>
         </section>
       ))}
+      <section>
+        <h3>
+          Conquistas — {done.size}/{ACHIEVEMENTS.length}
+        </h3>
+        <div className="achievement-list">
+          {ACHIEVEMENTS.map((a) => {
+            const ok = done.has(a.id);
+            return (
+              <div key={a.id} className={`achievement ${ok ? 'done' : ''}`}>
+                <span className="achievement-icon" aria-hidden>
+                  {ok ? '🏆' : '🔒'}
+                </span>
+                <b>{ok || !a.secret ? a.name : '???'}</b>
+                <small>{ok || !a.secret ? a.desc : 'Conquista secreta.'}</small>
+              </div>
+            );
+          })}
+        </div>
+        {!!(s.profile.onlineWins || s.profile.onlineLosses || s.profile.duplasWins) && (
+          <p className="muted">
+            Online: {s.profile.onlineWins ?? 0} vitória(s), {s.profile.onlineLosses ?? 0} derrota(s) · Duplas: {s.profile.duplasWins ?? 0} vitória(s)
+          </p>
+        )}
+      </section>
       <section>
         <h3>Chefes</h3>
         <div className="boss-list">

@@ -68,6 +68,8 @@ export interface CampState {
   bossesSeen: string[];
   players: Partial<Record<number, CampPlayer>>;
   blind: CampBlindState | null;
+  /** Blinds vencidos pela dupla (para o ranking). */
+  blindsWon: number;
 }
 
 /** Quem está em cada lugar humano: o servidor passa o que sabe da sala. */
@@ -94,6 +96,7 @@ export function newCamp(seed: string, stake: number, options: CampState['options
     bossesSeen: [],
     players: {},
     blind: null,
+    blindsWon: 0,
   };
   for (const h of humans) c.players[h.seat] = newPlayer();
   c.blinds = scheduleAnte(rng, 1, c.bossesSeen);
@@ -363,6 +366,7 @@ export function settle(c: CampState, humans: HumanSeat[]): void {
   const info = c.blinds[c.blindIndex];
   if (total >= target) {
     b.stage = 'won';
+    c.blindsWon += 1;
     info.status = 'defeated';
     c.phase = info.kind === 'chefe' && c.ante === FINAL_ANTE ? 'victory' : 'shop';
     for (const h of humans) c.players[h.seat]!.shopDone = false;
@@ -395,7 +399,7 @@ export function advanceIfReady(c: CampState, humans: HumanSeat[]): void {
 
 // ---------------------------------------------------------------- visão de cada jogador
 
-export function campView(c: CampState, seat: SeatNo, humans: HumanSeat[], host: boolean): CampView {
+export function campView(c: CampState, seat: SeatNo, humans: HumanSeat[], host: boolean, spectator = false): CampView {
   const b = c.blind;
   const partner = partnerOf(seat);
   const ph = humans.find((h) => h.seat === partner);
@@ -412,9 +416,9 @@ export function campView(c: CampState, seat: SeatNo, humans: HumanSeat[], host: 
     let hand = b.dhand;
     if (hand) {
       const names = b.seats.map((x) => x.name);
-      const view = viewDHand(hand, seat, names, b.stage === 'onze');
+      const view = viewDHand(hand, seat, names, b.stage === 'onze', spectator);
       // a carta adversária revelada a este jogador aparece de face
-      const rid = b.revealed[seat];
+      const rid = spectator ? undefined : b.revealed[seat];
       if (rid) view.hands = view.hands.map((cards, r) => cards.map((x, i) => (hand!.hands[rel(r)][i]?.id === rid ? hand!.hands[rel(r)][i] : x)));
       hand = view;
     }
@@ -424,7 +428,7 @@ export function campView(c: CampState, seat: SeatNo, humans: HumanSeat[], host: 
       stage: b.stage,
       handNo: b.handNo,
       handsLeft: b.handsLeft,
-      onzeYou: b.stage === 'onze' && b.onzeDecider === seat,
+      onzeYou: !spectator && b.stage === 'onze' && b.onzeDecider === seat,
       hideVira: b.hideVira,
       revealedId: b.revealed[seat],
       sentCards: !!p.cards,

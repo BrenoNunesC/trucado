@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { configureAudio } from '../audio/sfx';
+import { configureMusic } from '../audio/music';
 import type { CampView } from '../engine/campaign';
 import type { DuelRules, DuelView } from '../engine/duel';
 import type { DuplasView, SeatNo } from '../engine/duplas';
@@ -12,6 +13,7 @@ import type { LocalDuplas } from './screens/DuplasMode';
 import type { HandSummary, RunState } from '../engine/state';
 import { DECKS, STAKES } from '../data/decks';
 import { JOKERS } from '../data/jokers';
+import { newAchievements } from '../data/achievements';
 import { configureFx } from './fx';
 import { loadProfile, loadRun, loadSettings, saveOnlineRun, saveProfile, saveRun, saveSettings, type Profile, type Settings } from './persist';
 
@@ -40,6 +42,19 @@ export interface OnlineState {
   /** Campanha em dupla: o estado compartilhado e o baralho escolhido para a sua run. */
   camp?: CampView;
   campDeck?: string;
+  /** Só assistindo a sala (sem jogar). `players` = quem está jogando. */
+  spectator?: boolean;
+  players?: string[];
+  /** Chat da sala (as últimas mensagens). */
+  chat?: ChatLine[];
+}
+
+export interface ChatLine {
+  key: number;
+  from: string;
+  text: string;
+  mine: boolean;
+  spectator: boolean;
 }
 
 export type Modal =
@@ -113,6 +128,7 @@ const state: AppState = {
 };
 
 configureAudio(state.settings.volume, state.settings.muted);
+configureMusic(state.settings.musicVolume, state.settings.musicOn && !state.settings.muted);
 // administrador: o que entrou no jogo desde a última vez também já vem liberado
 if (state.profile.admin) queueMicrotask(unlockEverything);
 configureFx(state.settings.screenShake, state.settings.reducedMotion);
@@ -170,6 +186,15 @@ export function actFree<T>(fn: (m: FreeMatch) => T): T {
   return r;
 }
 
+/** Marca as conquistas que saíram agora e avisa com um toast. Devolve se mudou o perfil. */
+function checkAchievements(): boolean {
+  const fresh = newAchievements(state.profile, state.run);
+  if (!fresh.length) return false;
+  state.profile.achievements = [...(state.profile.achievements ?? []), ...fresh.map((a) => a.id)];
+  for (const a of fresh) toast(`🏆 Conquista: ${a.name}`, 'good');
+  return true;
+}
+
 export function persistRun(): void {
   const run = state.run;
   if (!run) return;
@@ -181,6 +206,7 @@ export function persistRun(): void {
       changed = true;
     }
   }
+  if (checkAchievements()) changed = true;
   if (changed) saveProfile(state.profile);
   // a run da campanha online não pode tomar o lugar da sua run solo salva
   if (run.coop?.online) saveOnlineRun(run.phase === 'over' ? null : run);
@@ -191,6 +217,7 @@ export function setSettings(patch: Partial<Settings>): void {
   Object.assign(state.settings, patch);
   saveSettings(state.settings);
   configureAudio(state.settings.volume, state.settings.muted);
+  configureMusic(state.settings.musicVolume, state.settings.musicOn && !state.settings.muted);
   configureFx(state.settings.screenShake, state.settings.reducedMotion);
   emit();
 }
@@ -220,6 +247,7 @@ export function setAdmin(on: boolean): void {
 
 export function updateProfile(fn: (p: Profile) => void): void {
   fn(state.profile);
+  checkAchievements();
   saveProfile(state.profile);
   emit();
 }

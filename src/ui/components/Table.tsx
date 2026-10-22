@@ -6,7 +6,7 @@ import { BET_NAMES, betValue, isHidden, responder, type TrucoHand } from '../../
 import type { Speech } from '../store';
 import { CardView } from './CardView';
 import { OpponentSeat, type Gesture } from './OpponentSeat';
-import { TableDecor } from './TableDecor';
+import { TableDecor, useTableTheme } from './TableDecor';
 import { Tip } from './Tip';
 
 export interface TableProps {
@@ -31,20 +31,22 @@ const sideLabel = { player: 'Você', ai: 'Adv.' } as const;
 /**
  * Descobre o que o adversário acabou de fazer comparando a mão com o quadro anterior:
  * uma carta a menos = jogou; um pedido de aposta dele = bateu na mesa; aceitou = batidinha;
- * correu = largou as cartas.
+ * correu = largou as cartas; levou a mão = comemora de braços para cima.
  */
 function useOpponentGesture(h: TrucoHand): { gesture: Gesture; key: number } {
   const [state, setState] = useState<{ gesture: Gesture; key: number }>({ gesture: null, key: 0 });
-  const prev = useRef({ ai: h.hands.ai.length, bet: '', level: h.level });
+  const prev = useRef({ ai: h.hands.ai.length, bet: '', level: h.level, result: '' });
   useEffect(() => {
     const p = prev.current;
     const bet = h.pending ? `${h.pending.by}-${h.pending.level}` : '';
+    const result = h.result ? `${h.result.winner}-${h.result.reason}` : '';
     let g: Gesture = null;
     if (h.result?.ranAway === 'ai') g = 'fold';
+    else if (result && result !== p.result && h.result!.winner === 'ai') g = 'cheer';
     else if (bet && bet !== p.bet && h.pending!.by === 'ai') g = 'slam';
     else if (h.hands.ai.length < p.ai) g = 'throw';
     else if (!bet && p.bet.startsWith('player') && h.level > p.level) g = 'tap';
-    prev.current = { ai: h.hands.ai.length, bet, level: h.level };
+    prev.current = { ai: h.hands.ai.length, bet, level: h.level, result };
     // nova mão: as cartas voltam e o gesto anterior some
     if (h.hands.ai.length > p.ai) setState((s) => ({ gesture: null, key: s.key + 1 }));
     else if (g) setState((s) => ({ gesture: g, key: s.key + 1 }));
@@ -59,10 +61,11 @@ export function Table(p: TableProps) {
   const pending = h.pending;
   const playerMustRespond = pending && responder(h) === 'player';
   const gesture = useOpponentGesture(h);
+  const theme = useTableTheme();
 
   return (
-    <div className={`table ${pending ? 'bet-pending' : ''}`}>
-      <TableDecor />
+    <div className={`table theme-${theme} ${pending ? 'bet-pending' : ''}`}>
+      <TableDecor theme={theme} />
       <div className="opp-zone">
         <OpponentSeat
           id={p.portraitId}

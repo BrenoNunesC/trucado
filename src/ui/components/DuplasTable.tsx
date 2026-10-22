@@ -8,9 +8,10 @@ import { RANK_NAME, type Card } from '../../engine/cards';
 import { currentDRound, dActor, teamOf, type DHand, type SeatNo } from '../../engine/duplas';
 import { BET_NAMES, betValue } from '../../engine/truco';
 import type { Speech } from '../store';
+import { burst } from '../fx';
 import { CardView } from './CardView';
 import { OpponentSeat, type Gesture } from './OpponentSeat';
-import { TableDecor } from './TableDecor';
+import { TableDecor, useTableTheme } from './TableDecor';
 import { Tip } from './Tip';
 
 export interface DuplasTableProps {
@@ -40,15 +41,18 @@ type SeatGesture = { gesture: Gesture; key: number };
 
 /**
  * O que cada um dos outros três acabou de fazer, comparando a mão com o quadro anterior:
- * uma carta a menos = jogou; um pedido de aposta dele = bateu na mesa; a dupla correu = largou.
+ * uma carta a menos = jogou; um pedido de aposta dele = bateu na mesa; a dupla correu = largou;
+ * a dupla levou a mão = comemora.
  */
 function useSeatGestures(h: DHand): Record<number, SeatGesture> {
   const [g, setG] = useState<Record<number, SeatGesture>>({ 1: { gesture: null, key: 0 }, 2: { gesture: null, key: 0 }, 3: { gesture: null, key: 0 } });
-  const prev = useRef({ counts: h.hands.map((x) => x.length), bet: '' });
+  const prev = useRef({ counts: h.hands.map((x) => x.length), bet: '', result: '' });
   useEffect(() => {
     const p = prev.current;
     const counts = h.hands.map((x) => x.length);
     const bet = h.pending ? `${h.pending.by}-${h.pending.level}` : '';
+    const result = h.result ? `${h.result.winner}-${h.result.reason}` : '';
+    const won = result && result !== p.result ? h.result!.winner : null;
     const next = { ...g };
     let changed = false;
     const set = (s: number, gesture: Gesture) => {
@@ -58,10 +62,11 @@ function useSeatGestures(h: DHand): Record<number, SeatGesture> {
     for (const s of [1, 2, 3]) {
       if (counts[s] > p.counts[s]) set(s, null); // mão nova
       else if (h.result?.reason === 'run' && h.result.ranAway === teamOf(s as SeatNo) && g[s]?.gesture !== 'fold') set(s, 'fold');
+      else if (won !== null && teamOf(s as SeatNo) === won) set(s, 'cheer');
       else if (bet && bet !== p.bet && h.pending!.by === s) set(s, 'slam');
       else if (counts[s] < p.counts[s]) set(s, 'throw');
     }
-    prev.current = { counts, bet };
+    prev.current = { counts, bet, result };
     if (changed) setG(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [h, h.hands, h.pending, h.result]);
@@ -70,11 +75,26 @@ function useSeatGestures(h: DHand): Record<number, SeatGesture> {
 
 /** Onde cada lugar senta e de que lado o corpo dele sai. */
 const SEAT_CLASS = ['me', 'right', 'partner', 'left'] as const;
+/** A carta jogada voa a partir de quem jogou. */
+const PLAY_IN = ['play-in-bottom', 'play-in-right', 'play-in-top', 'play-in-left'] as const;
+const CHEERS = ['Fechou!', 'É nóis!', 'Toma!', 'Aí sim, parceiro!', 'Que isso!'];
 
 export function DuplasTable(p: DuplasTableProps) {
   const h = p.hand;
   const r = currentDRound(h);
   const gestures = useSeatGestures(h);
+  const theme = useTableTheme();
+  // o parceiro comemora a mão da dupla: grito e confete no meio da mesa
+  const centerRef = useRef<HTMLDivElement>(null);
+  const [cheer, setCheer] = useState<{ key: number; text: string } | null>(null);
+  const partner = gestures[2];
+  useEffect(() => {
+    if (partner?.gesture !== 'cheer') return;
+    setCheer({ key: partner.key, text: CHEERS[partner.key % CHEERS.length] });
+    burst(centerRef.current, '#ffd34d', 26);
+    const t = setTimeout(() => setCheer(null), 1800);
+    return () => clearTimeout(t);
+  }, [partner?.gesture, partner?.key]);
   const who = dActor(h);
   const blind = !!h.options.blindPlay;
   // no meio fica a rodada atual; enquanto ninguém jogou nela, a que acabou de fechar
@@ -83,8 +103,8 @@ export function DuplasTable(p: DuplasTableProps) {
   const manilha = p.hideVira ? null : h.manilha;
 
   return (
-    <div className={`table duplas-table ${h.pending ? 'bet-pending' : ''}`}>
-      <TableDecor />
+    <div className={`table duplas-table theme-${theme} ${h.pending ? 'bet-pending' : ''}`}>
+      <TableDecor theme={theme} />
 
       {([1, 2, 3] as SeatNo[]).map((s) => (
         <div key={s} className={`duplas-seat seat-${SEAT_CLASS[s]} ${who === s ? 'acting' : ''}`}>
@@ -106,15 +126,22 @@ export function DuplasTable(p: DuplasTableProps) {
             {p.offline?.[s] && <em className="online-off">desconectado</em>}
             {h.mao === s && <span className="duplas-mao">mão</span>}
           </div>
-          {p.speech?.seat === s && (
+          {p.speech?.seat === s ? (
             <span className="speech duplas-speech" key={p.speech.key} role="status">
               {p.speech.text}
             </span>
+          ) : (
+            s === 2 &&
+            cheer && (
+              <span className="speech duplas-speech cheer" key={`cheer-${cheer.key}`} role="status">
+                {cheer.text}
+              </span>
+            )
           )}
         </div>
       ))}
 
-      <div className="duplas-center">
+      <div className="duplas-center" ref={centerRef}>
         <div className="duplas-cross">
           {([2, 3, 1, 0] as SeatNo[]).map((s) => {
             const card = center.cards[s];
@@ -123,14 +150,14 @@ export function DuplasTable(p: DuplasTableProps) {
               <div key={s} className={`duplas-slot slot-${SEAT_CLASS[s]} ${who === s && h.phase === 'play' ? 'turn' : ''}`}>
                 {card &&
                   (center.hidden[s] ? (
-                    <CardView back small className={s === 0 ? 'play-in-bottom' : 'play-in-top'} label="Carta virada" />
+                    <CardView back small className={PLAY_IN[s]} label="Carta virada" />
                   ) : (
                     <CardView
                       card={card}
                       manilha={p.hideVira ? null : center.manilha}
                       small
                       tip
-                      className={s === 0 ? 'play-in-bottom' : 'play-in-top'}
+                      className={PLAY_IN[s]}
                       outcome={won ? 'win' : undefined}
                     />
                   ))}

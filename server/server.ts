@@ -16,11 +16,12 @@ import { WebSocketServer, type WebSocket } from 'ws';
 import { decideDuplas } from '../src/ai/duplas';
 import type { PersonalityId } from '../src/ai/opponent';
 import { OPPONENT_BY_ID, OPPONENTS } from '../src/data/opponents';
-import { applyDuel, forfeitDuel, newDuel, nextDuelHand, viewFor, type DuelAction, type DuelMatch, type DuelRules } from '../src/engine/duel';
-import { applyDuplas, dActor, duplasViewFor, newDuplas, nextDuplasHand, SEATS, type DuplasAction, type DuplasMatch, type SeatNo } from '../src/engine/duplas';
+import { applyDuel, forfeitDuel, newDuel, nextDuelHand, spectatorView, viewFor, type DuelAction, type DuelMatch, type DuelRules } from '../src/engine/duel';
+import { applyDuplas, dActor, duplasViewFor, newDuplas, nextDuplasHand, partnerOf, SEATS, type DuplasAction, type DuplasMatch, type SeatNo } from '../src/engine/duplas';
 import { fork } from '../src/engine/rng';
 import { other, type Side } from '../src/engine/truco';
-import { EMOTES, PROTOCOL_VERSION, type ClientMsg, type PlayerInfo, type RoomMode, type Seat, type ServerMsg } from '../src/net/protocol';
+import { EMOTES, PROTOCOL_VERSION, type ClientMsg, type GiftJoker, type PlayerInfo, type RoomMode, type Seat, type ServerMsg } from '../src/net/protocol';
+import { StatsStore } from './stats';
 import {
   advanceIfReady,
   campAct,
@@ -50,6 +51,8 @@ export interface ServerOptions {
   log?: (msg: string) => void;
   /** Mensagens por segundo aceitas de cada conexão (o resto é descartado). */
   maxMsgsPerSec?: number;
+  /** Arquivo do ranking (null ou ausente = só na memória). */
+  statsFile?: string | null;
 }
 
 interface SeatState {
@@ -71,6 +74,10 @@ interface DuelRoom {
   seats: Partial<Record<Side, SeatState>>;
   match: DuelMatch | null;
   nextTimer: ReturnType<typeof setTimeout> | null;
+  /** Quem está só assistindo (conexão → nome). */
+  spectators: Map<WebSocket, string>;
+  /** Resultados já gravados no ranking (partidas encerradas ou Blinds vencidos). */
+  recorded: number;
 }
 
 interface DuplasRoom {
@@ -82,6 +89,10 @@ interface DuplasRoom {
   match: DuplasMatch | null;
   nextTimer: ReturnType<typeof setTimeout> | null;
   botTimer: ReturnType<typeof setTimeout> | null;
+  /** Quem está só assistindo (conexão → nome). */
+  spectators: Map<WebSocket, string>;
+  /** Resultados já gravados no ranking (partidas encerradas ou Blinds vencidos). */
+  recorded: number;
 }
 
 /** Campanha em dupla: humanos nos lugares 0 e 2; a dupla adversária (1 e 3) é sempre a IA. */
@@ -94,6 +105,12 @@ interface CampRoom {
   camp: CampState | null;
   nextTimer: ReturnType<typeof setTimeout> | null;
   botTimer: ReturnType<typeof setTimeout> | null;
+  /** A vitória da campanha já foi para o ranking. */
+  recordedVictory?: boolean;
+  /** Quem está só assistindo (conexão → nome). */
+  spectators: Map<WebSocket, string>;
+  /** Resultados já gravados no ranking (partidas encerradas ou Blinds vencidos). */
+  recorded: number;
 }
 
 type Room = DuelRoom | DuplasRoom | CampRoom;
@@ -113,9 +130,19 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
   const log = opts.log ?? (() => {});
   const rooms = new Map<string, Room>();
   const where = new WeakMap<WebSocket, Where>();
+  /** Sala de quem está só assistindo. */
+  const watching = new WeakMap<WebSocket, Room>();
+  const stats = new StatsStore(opts.statsFile ?? null);
 
   // a página de saúde (as hospedagens checam se o serviço responde)
-  const http = createHttpServer((_req, res) => {
+  const http = createHttpServer((req, res) => {
+    const url = new URL(req.url ?? '/', 'http://x');
+    // ranking online: GET /ranking?id=<seu id> (o jogo busca daqui)
+    if (url.pathname === '/ranking') {
+      res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*' });
+      res.end(JSON.stringify(stats.ranking(30, url.searchParams.get('id') ?? undefined)));
+      return;
+    }
     res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8' });
     res.end(`Trucado online: ${rooms.size} sala(s)\n`);
   });
@@ -142,13 +169,15 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
       .trim()
       .slice(0, 18);
     const avatar = p && OPPONENT_BY_ID[p.avatar] ? p.avatar : OPPONENTS[randomInt(OPPONENTS.length)].id;
-    return { name: name || 'Jogador', avatar };
+    const id = typeof p?.id === 'string' && /^[A-Za-z0-9-]{8,64}$/.test(p.id) ? p.id : undefined;
+    return { name: name || 'Jogador', avatar, id };
   }
 
   function closeRoom(room: Room) {
     if (room.nextTimer) clearTimeout(room.nextTimer);
     if (room.mode !== 'duel' && room.botTimer) clearTimeout(room.botTimer);
     for (const s of Object.values(room.seats)) if (s?.leftTimer) clearTimeout(s.leftTimer);
+    for (const ws of room.spectators.keys()) send(ws, { t: 'error', msg: 'A sala fechou.', fatal: true });
     rooms.delete(room.code);
     log(`sala ${room.code}: fechada`);
   }
@@ -156,6 +185,7 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
   // ---------------------------------------------------------------- 1 contra 1
 
   function broadcastDuel(room: DuelRoom) {
+    recordDuel(room);
     for (const side of ['player', 'ai'] as Side[]) {
       const me = room.seats[side];
       if (!me?.ws) continue;
@@ -173,6 +203,24 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
         rematch: { you: me.wantsRematch, opp: opp.wantsRematch },
       });
     }
+    const host = room.seats.player;
+    const guest = room.seats.ai;
+    if (room.match && host && guest) {
+      const view = spectatorView(room.match, host.info.name, guest.info.name);
+      for (const ws of room.spectators.keys())
+        send(ws, { t: 'state', code: room.code, view, you: seatPublic(host), opp: seatPublic(guest), rematch: { you: false, opp: false }, spectator: true });
+    }
+  }
+
+  /** Partida 1 contra 1 encerrada: vai para o ranking (uma vez por partida). */
+  function recordDuel(room: DuelRoom) {
+    const m = room.match;
+    if (!m || m.stage !== 'over' || room.recorded) return;
+    room.recorded = 1;
+    for (const side of ['player', 'ai'] as Side[]) {
+      const p = room.seats[side];
+      if (p) stats.record(p.info.id, p.info.name, (st) => (m.winner === side ? st.duelWins++ : st.duelLosses++));
+    }
   }
 
   function seatDuel(room: DuelRoom, side: Side, ws: WebSocket, info: PlayerInfo) {
@@ -184,6 +232,7 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
 
   function startDuel(room: DuelRoom) {
     room.match = newDuel(randomBytes(6).toString('hex'), room.rules);
+    room.recorded = 0;
     for (const s of Object.values(room.seats)) if (s) s.wantsRematch = false;
     log(`sala ${room.code}: partida 1x1 começou`);
   }
@@ -223,6 +272,7 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
   const names = (room: DuplasRoom) => room.seats.map((s, i) => s?.info.name ?? `IA ${i + 1}`);
 
   function broadcastDuplas(room: DuplasRoom) {
+    recordDuplas(room);
     const locked = room.mode === 'coop' ? COOP_LOCKED : [false, false, false, false];
     for (const seat of SEATS) {
       const me = room.seats[seat];
@@ -249,6 +299,23 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
         rematch: { you: me.wantsRematch, waiting: humans.filter((s) => !s!.wantsRematch).length },
       });
     }
+    if (room.match) {
+      // quem assiste vê a mesa do lugar 0, sem as cartas de ninguém
+      const view = duplasViewFor(room.match, 0, names(room), true);
+      const seats = room.seats.map((s) => seatPublic(s!));
+      for (const ws of room.spectators.keys())
+        send(ws, { t: 'dstate', code: room.code, mode: room.mode, view, seats, rematch: { you: false, waiting: 0 }, spectator: true });
+    }
+  }
+
+  /** Partida de duplas encerrada: vitória ou derrota para cada humano (uma vez por partida). */
+  function recordDuplas(room: DuplasRoom) {
+    const m = room.match;
+    if (!m || m.stage !== 'over' || room.recorded) return;
+    room.recorded = 1;
+    room.seats.forEach((p, i) => {
+      if (p && !p.bot) stats.record(p.info.id, p.info.name, (st) => (m.winner === i % 2 ? st.duplasWins++ : st.duplasLosses++));
+    });
   }
 
   function makeBot(room: DuplasRoom, seat: SeatNo): SeatState {
@@ -281,6 +348,7 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
   function startDuplas(room: DuplasRoom) {
     for (const seat of SEATS) if (!room.seats[seat]) room.seats[seat] = makeBot(room, seat);
     room.match = newDuplas(randomBytes(6).toString('hex'), room.rules);
+    room.recorded = 0;
     for (const s of room.seats) if (s && !s.bot) s.wantsRematch = false;
     log(`sala ${room.code}: partida de duplas (${room.mode}) começou`);
   }
@@ -344,6 +412,7 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
   }
 
   function broadcastCamp(room: CampRoom) {
+    recordCamp(room);
     const humans = campHumans(room);
     for (const seat of [0, 2] as SeatNo[]) {
       const me = room.seats[seat];
@@ -361,6 +430,29 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
         continue;
       }
       send(me.ws, { t: 'cstate', code: room.code, view: campView(room.camp, seat, humans, me.token === room.hostToken) });
+    }
+    if (room.camp) {
+      const view = campView(room.camp, 0, humans, false, true);
+      for (const ws of room.spectators.keys()) send(ws, { t: 'cstate', code: room.code, view, spectator: true });
+    }
+  }
+
+  /** Cada Blind vencido pela dupla (e a vitória da campanha) vai para o ranking dos dois. */
+  function recordCamp(room: CampRoom) {
+    const c = room.camp;
+    if (!c) return;
+    const humans = ([0, 2] as SeatNo[]).map((s) => room.seats[s]).filter((p): p is SeatState => !!p && !p.gone);
+    while (room.recorded < c.blindsWon) {
+      room.recorded++;
+      for (const p of humans)
+        stats.record(p.info.id, p.info.name, (st) => {
+          st.campBlinds++;
+          st.campBestAnte = Math.max(st.campBestAnte, c.ante);
+        });
+    }
+    if (c.phase === 'victory' && !room.recordedVictory) {
+      room.recordedVictory = true;
+      for (const p of humans) stats.record(p.info.id, p.info.name, (st) => st.campVictories++);
     }
   }
 
@@ -396,6 +488,63 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
       campTryDeal(room.camp, humans);
     }
     afterCamp(room);
+  }
+
+  // ---------------------------------------------------------------- chat, espectadores e presentes
+
+  /** Todas as conexões de jogadores de uma sala. */
+  function playerSockets(room: Room): WebSocket[] {
+    const seats = room.mode === 'duel' ? Object.values(room.seats) : room.seats;
+    return seats.flatMap((p) => (p?.ws ? [p.ws] : []));
+  }
+
+  /**
+   * Chat livre: sem filtro de palavras. Só tira caracteres de controle e corta em 300 letras, para
+   * a mensagem caber na tela.
+   */
+  function roomChat(room: Room, from: WebSocket, fromName: string, raw: unknown, spectator: boolean) {
+    const text = [...String(raw ?? '')]
+      .filter((ch) => ch.charCodeAt(0) >= 32)
+      .join('')
+      .trim()
+      .slice(0, 300);
+    if (!text) return;
+    const name = spectator ? `${fromName} (assistindo)` : fromName;
+    for (const ws of [...playerSockets(room), ...room.spectators.keys()]) send(ws, { t: 'chat', from: name, text, mine: ws === from, spectator });
+  }
+
+  /** Começa a assistir uma sala. */
+  function watch(ws: WebSocket, code: unknown, name: unknown) {
+    const room = rooms.get(String(code ?? '').toUpperCase().trim());
+    if (!room) return send(ws, { t: 'error', msg: 'Sala não encontrada. Confira o código.', fatal: true });
+    room.spectators.set(ws, cleanInfo({ name: String(name ?? ''), avatar: '' }).name);
+    watching.set(ws, room);
+    const players = (room.mode === 'duel' ? Object.values(room.seats) : room.seats).flatMap((p) => (p ? [p.info.name] : []));
+    send(ws, { t: 'watching', code: room.code, mode: room.mode, players });
+    if (room.mode === 'duel') broadcastDuel(room);
+    else if (room.mode === 'campaign') broadcastCamp(room);
+    else broadcastDuplas(room);
+  }
+
+  /** Coringa de presente para o parceiro; se não der para entregar, volta para quem deu. */
+  function gift(room: CampRoom, seat: SeatNo, joker: unknown) {
+    const j = joker as GiftJoker;
+    const ok =
+      j &&
+      typeof j === 'object' &&
+      typeof j.id === 'string' &&
+      j.id.length <= 40 &&
+      (j.edition === undefined || ['folheada', 'holografica', 'fosforescente'].includes(j.edition)) &&
+      j.state &&
+      typeof j.state === 'object' &&
+      Object.keys(j.state).length <= 20 &&
+      Object.values(j.state).every((v) => typeof v === 'number');
+    if (!ok) return;
+    const clean: GiftJoker = { id: j.id, edition: j.edition, state: { ...j.state }, cost: Math.max(0, Number(j.cost) || 0) };
+    const me = room.seats[seat]!;
+    const partner = room.seats[partnerOf(seat)];
+    if (room.camp?.phase === 'shop' && partner?.ws) send(partner.ws, { t: 'cgift', from: me.info.name, joker: clean });
+    else send(me.ws, { t: 'cgift', from: me.info.name, joker: clean, returned: true });
   }
 
   // ---------------------------------------------------------------- mensagens
@@ -448,6 +597,10 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
         }
         return;
       }
+      case 'chat':
+        return roomChat(room, ws, room.seats[seat]?.info.name ?? 'Jogador', msg.text, false);
+      case 'cgift':
+        return gift(room, seat, msg.joker);
       case 'leave':
         where.delete(ws);
         return leaveCamp(room, seat);
@@ -455,6 +608,19 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
   }
 
   function onMessage(ws: WebSocket, msg: ClientMsg) {
+    const viewing = watching.get(ws);
+    if (viewing) {
+      if (msg.t === 'chat') roomChat(viewing, ws, viewing.spectators.get(ws) ?? 'Alguém', msg.text, true);
+      if (msg.t === 'leave') {
+        viewing.spectators.delete(ws);
+        watching.delete(ws);
+      }
+      return;
+    }
+    if (msg.t === 'watch') {
+      if (where.get(ws) || !versionOk(ws, msg.v)) return;
+      return watch(ws, msg.code, msg.name);
+    }
     const found = where.get(ws);
     if (found?.room.mode === 'campaign') {
       if (msg.t === 'create' || msg.t === 'join' || msg.t === 'resume') return;
@@ -469,7 +635,7 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
         const rules: DuelRules = { maoDeOnze: msg.rules?.maoDeOnze !== false, maoDeFerro: msg.rules?.maoDeFerro !== false };
         const mode: RoomMode = msg.mode === 'duplas' || msg.mode === 'coop' || msg.mode === 'campaign' ? msg.mode : 'duel';
         if (mode === 'campaign') {
-          const room: CampRoom = { mode, code: newCode(), rules, seats: [null, null, null, null], hostToken: newToken(), camp: null, nextTimer: null, botTimer: null };
+          const room: CampRoom = { mode, code: newCode(), rules, seats: [null, null, null, null], hostToken: newToken(), camp: null, nextTimer: null, botTimer: null, spectators: new Map(), recorded: 0 };
           rooms.set(room.code, room);
           const s: SeatState = { info: cleanInfo(msg.player), token: room.hostToken, ws, leftTimer: null, wantsRematch: false };
           room.seats[0] = s;
@@ -479,13 +645,13 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
           return broadcastCamp(room);
         }
         if (mode === 'duel') {
-          const room: DuelRoom = { mode, code: newCode(), rules, seats: {}, match: null, nextTimer: null };
+          const room: DuelRoom = { mode, code: newCode(), rules, seats: {}, match: null, nextTimer: null, spectators: new Map(), recorded: 0 };
           rooms.set(room.code, room);
           seatDuel(room, 'player', ws, cleanInfo(msg.player));
           log(`sala ${room.code}: criada (1x1)`);
           return broadcastDuel(room);
         }
-        const room: DuplasRoom = { mode, code: newCode(), rules, seats: [null, null, null, null], hostToken: '', match: null, nextTimer: null, botTimer: null };
+        const room: DuplasRoom = { mode, code: newCode(), rules, seats: [null, null, null, null], hostToken: '', match: null, nextTimer: null, botTimer: null, spectators: new Map(), recorded: 0 };
         rooms.set(room.code, room);
         const token = newToken();
         room.hostToken = token;
@@ -580,6 +746,11 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
         startDuplas(room);
         return afterDuplas(room);
       }
+      case 'chat': {
+        if (!at) return;
+        const p = at.room.mode === 'duel' ? at.room.seats[at.side as Side] : at.room.seats[at.side as SeatNo];
+        return roomChat(at.room, ws, p?.info.name ?? 'Jogador', msg.text, false);
+      }
       case 'emote': {
         if (!at || !Number.isInteger(msg.id) || msg.id < 0 || msg.id >= EMOTES.length) return;
         if (at.room.mode === 'duel') {
@@ -644,6 +815,7 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
     ws.on('close', () => {
       clearInterval(ping);
       clearInterval(burstTimer);
+      watching.get(ws)?.spectators.delete(ws);
       const at = where.get(ws);
       if (!at) return;
       const room = at.room;
@@ -678,6 +850,7 @@ export function startServer(opts: ServerOptions): Promise<{ http: Server; close:
         rooms,
         close: () =>
           new Promise<void>((done) => {
+            stats.flush();
             for (const room of [...rooms.values()]) closeRoom(room);
             for (const c of wss.clients) c.terminate();
             wss.close(() => http.close(() => done()));

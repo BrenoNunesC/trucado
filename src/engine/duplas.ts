@@ -420,11 +420,19 @@ function blank(id: string): Card {
   return { id: `x-${x.toString(36)}`, rank: '4', suit: 'ouros' };
 }
 
-/** Troca os marcadores do log pelos nomes, do ponto de vista de `seat`. */
-export function formatDuplasLog(text: string, seat: SeatNo, names: string[]): string {
+/**
+ * Troca os marcadores do log pelos nomes, do ponto de vista de `seat`. Quem só assiste (`seat`
+ * = -1) vê todos pelo nome e as duplas como "a dupla de Fulano e Beltrano".
+ */
+export function formatDuplasLog(text: string, seat: SeatNo | -1, names: string[]): string {
+  const name = (d: number) => names[d] ?? `Jogador ${d + 1}`;
   return text
-    .replace(/\{s(\d)\}/g, (_, d) => (Number(d) === seat ? 'Você' : names[Number(d)] ?? `Jogador ${Number(d) + 1}`))
-    .replace(/\{t(\d)\}/g, (_, d) => (Number(d) === teamOf(seat) ? 'Sua dupla' : 'A dupla adversária'));
+    .replace(/\{s(\d)\}/g, (_, d) => (Number(d) === seat ? 'Você' : name(Number(d))))
+    .replace(/\{t(\d)\}/g, (_, d) => {
+      const t = Number(d) as Team;
+      if (seat === -1) return `A dupla de ${name(t)} e ${name(t + 2)}`;
+      return t === teamOf(seat) ? 'Sua dupla' : 'A dupla adversária';
+    });
 }
 
 /**
@@ -432,21 +440,23 @@ export function formatDuplasLog(text: string, seat: SeatNo, names: string[]): st
  * (menos o parceiro quando `partnerVisible`), as viradas dos outros, as cartas iniciais dos
  * outros, as próximas viras e, na Mão de Ferro, até as próprias cartas.
  */
-export function viewDHand(h: DHand, seat: SeatNo, names: string[], partnerVisible = false): DHand {
+export function viewDHand(h: DHand, seat: SeatNo, names: string[], partnerVisible = false, spectator = false): DHand {
   const rel = (s: SeatNo): SeatNo => ((s - seat + 4) % 4) as SeatNo;
   const relTeam = (t: Team): Team => (teamOf(seat) === 0 ? t : otherTeam(t));
   const fromRel = (r: number): SeatNo => ((r + seat) % 4) as SeatNo;
   const done = h.phase === 'done';
+  // quem assiste não tem mão nenhuma: vê como se não estivesse em lugar algum
+  const own = (s: SeatNo) => !spectator && s === seat;
   return {
     ...h,
     hands: [0, 1, 2, 3].map((r) => {
       const s = fromRel(r);
       const cards = h.hands[s];
-      if (s === seat && h.options.blindPlay && !done) return cards.map((c) => blank(c.id));
-      if (s === seat || done || (partnerVisible && s === partnerOf(seat))) return cards;
+      if (own(s) && h.options.blindPlay && !done) return cards.map((c) => blank(c.id));
+      if (own(s) || done || (!spectator && partnerVisible && s === partnerOf(seat))) return cards;
       return cards.map((c) => blank(c.id));
     }),
-    dealt: [0, 1, 2, 3].map((r) => (fromRel(r) === seat || done ? h.dealt[fromRel(r)] : [])),
+    dealt: [0, 1, 2, 3].map((r) => (own(fromRel(r)) || done ? h.dealt[fromRel(r)] : [])),
     houseDeck: [],
     bets: h.bets.map((b) => ({ ...b, by: rel(b.by) })),
     rounds: h.rounds.map((r) => ({
@@ -456,7 +466,7 @@ export function viewDHand(h: DHand, seat: SeatNo, names: string[], partnerVisibl
       cards: [0, 1, 2, 3].map((x) => {
         const s = fromRel(x);
         const c = r.cards[s];
-        return c && r.hidden[s] && s !== seat ? blank(c.id) : c;
+        return c && r.hidden[s] && !own(s) ? blank(c.id) : c;
       }),
       hidden: [0, 1, 2, 3].map((x) => r.hidden[fromRel(x)]),
       order: r.order.map(rel),
@@ -472,23 +482,23 @@ export function viewDHand(h: DHand, seat: SeatNo, names: string[], partnerVisibl
       winner: h.result.winner === null ? null : relTeam(h.result.winner),
       ranAway: h.result.ranAway === undefined ? undefined : relTeam(h.result.ranAway),
     },
-    log: h.log.map((e) => ({ ...e, text: formatDuplasLog(e.text, seat, names) })),
+    log: h.log.map((e) => ({ ...e, text: formatDuplasLog(e.text, spectator ? -1 : seat, names) })),
     options: { ...h.options, tieWinner: h.options.tieWinner === undefined ? undefined : relTeam(h.options.tieWinner) },
   };
 }
 
-export function duplasViewFor(m: DuplasMatch, seat: SeatNo, names: string[]): DuplasView {
+export function duplasViewFor(m: DuplasMatch, seat: SeatNo, names: string[], spectator = false): DuplasView {
   const h = m.hand;
   const relTeam = (t: Team): Team => (teamOf(seat) === 0 ? t : otherTeam(t));
   const partnerVisible = m.onzeTeam !== null && m.onzeTeam === teamOf(seat) && h.phase !== 'done';
-  const hand = viewDHand(h, seat, names, partnerVisible);
+  const hand = viewDHand(h, seat, names, partnerVisible, spectator);
   const mine = teamOf(seat);
   return {
     hand,
     score: mine === 0 ? [m.score[0], m.score[1]] : [m.score[1], m.score[0]],
     stage: m.stage,
     winner: m.winner === null ? null : relTeam(m.winner),
-    onzeYou: m.stage === 'onze' && m.onzeDecider === seat,
+    onzeYou: !spectator && m.stage === 'onze' && m.onzeDecider === seat,
     onzeWaiting: m.stage === 'onze' && m.onzeTeam !== null ? relTeam(m.onzeTeam) : null,
     lastPoints: m.lastPoints && { ...m.lastPoints, team: m.lastPoints.team === null ? null : relTeam(m.lastPoints.team) },
     handNo: m.handNo,

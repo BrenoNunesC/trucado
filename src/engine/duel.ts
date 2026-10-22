@@ -254,3 +254,22 @@ export function viewFor(m: DuelMatch, side: Side): DuelView {
     rules: m.rules,
   };
 }
+
+/**
+ * A mesa para quem só assiste: vista do lado de quem criou a sala, mas sem as cartas na mão de
+ * nenhum dos dois (nem as viradas), e o log com o nome de cada um no lugar de "Você"/"Adversário".
+ */
+export function spectatorView(m: DuelMatch, hostName: string, guestName: string): DuelView {
+  const v = viewFor(m, 'player');
+  const h = v.hand;
+  if (h.phase !== 'done') {
+    h.hands = { player: m.hand.hands.player.map((c) => blank(c.id)), ai: h.hands.ai };
+    h.dealt = { player: [], ai: [] };
+    h.rounds = h.rounds.map((r, i) => {
+      const real = m.hand.rounds[i];
+      return real.cards.player && isHidden(real, 'player') ? { ...r, cards: { ...r.cards, player: blank(real.cards.player.id) } } : r;
+    });
+  }
+  h.log = h.log.map((e) => ({ ...e, text: e.text.replace(/Você|Adversário/g, (w) => (w === 'Você' ? hostName : guestName)) }));
+  return { ...v, onzeYou: false, onzeOpp: false };
+}

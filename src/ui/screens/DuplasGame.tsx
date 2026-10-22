@@ -7,11 +7,15 @@ import { dActor, dCanBet, dCanPlayHidden, dCanRaise, DUPLAS_TARGET, teamOf, type
 import { BET_NAMES, type BetResponse } from '../../engine/truco';
 import { DuplasTable } from '../components/DuplasTable';
 import { HandLog } from '../components/Sidebar';
-import type { Speech } from '../store';
+import { updateProfile, type Speech } from '../store';
 import { shake } from '../fx';
 import { Tentos } from './FreeMode';
 
 export interface DuplasGameProps {
+  /** Só assistindo: sem botões de jogada. */
+  readOnly?: boolean;
+  /** Partida online (conta também nas vitórias online do perfil). */
+  online?: boolean;
   view: DuplasView;
   /** Nomes, personagens e conexão nos lugares da visão (0 = você, 2 = parceiro). */
   names: string[];
@@ -34,8 +38,8 @@ export function DuplasGame(p: DuplasGameProps) {
   const [hiddenNext, setHiddenNext] = useState(false);
   const who = dActor(h);
   const playing = v.stage === 'playing' && h.phase !== 'done';
-  const myTurn = playing && h.phase === 'play' && who === 0;
-  const mustRespond = playing && h.phase === 'respond' && who === 0;
+  const myTurn = !p.readOnly && playing && h.phase === 'play' && who === 0;
+  const mustRespond = !p.readOnly && playing && h.phase === 'respond' && who === 0;
   const hiddenOk = myTurn && dCanPlayHidden(h, 0);
   const nextLevel = Math.min(4, (h.pending?.level ?? h.level) + 1);
 
@@ -56,9 +60,23 @@ export function DuplasGame(p: DuplasGameProps) {
     seen.current = { hand: v.handNo, log: h.log.length, counts: h.hands.map((x) => x.length) };
   }, [v.handNo, h.log.length, h.log, h.hands, h.pending]);
 
+  // fim da partida: som e placar do perfil (só quando acaba aqui, não ao reabrir a tela)
+  const wasOver = useRef(v.stage === 'over');
   useEffect(() => {
-    if (v.stage === 'over') sfx(v.winner === 0 ? 'victory' : 'gameOver');
-  }, [v.stage, v.winner]);
+    const over = v.stage === 'over';
+    if (over && !wasOver.current) {
+      sfx(v.winner === 0 ? 'victory' : 'gameOver');
+      if (!p.readOnly)
+        updateProfile((x) => {
+          if (v.winner === 0) x.duplasWins = (x.duplasWins ?? 0) + 1;
+          if (p.online) {
+            if (v.winner === 0) x.onlineWins = (x.onlineWins ?? 0) + 1;
+            else x.onlineLosses = (x.onlineLosses ?? 0) + 1;
+          }
+        });
+    }
+    wasOver.current = over;
+  }, [v.stage, v.winner, p.readOnly, p.online]);
 
   // uma ação por vez: até a mesa mudar (no online, até o servidor responder), cliques extras
   // (duplo clique, tecla repetida) são ignorados
@@ -137,7 +155,7 @@ export function DuplasGame(p: DuplasGameProps) {
         <HandLog log={h.log} />
       </div>
       <div className="controls">
-        {v.onzeYou && (
+        {v.onzeYou && !p.readOnly && (
           <>
             <span className="hint">Mão de Onze! Você vê as cartas do parceiro. Jogar valendo 3 ou correr (a outra dupla ganha 1)?</span>
             <button className="btn primary" onClick={() => send({ t: 'onze', play: true })}>

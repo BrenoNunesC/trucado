@@ -6,7 +6,8 @@ import type { CampView } from '../engine/campaign';
 import type { DuelAction, DuelRules } from '../engine/duel';
 import type { DuplasAction, SeatNo } from '../engine/duplas';
 import { say, toast, update } from '../ui/store';
-import { EMOTES, PROTOCOL_VERSION, type ClientMsg, type PlayerInfo, type RoomMode, type ServerMsg } from './protocol';
+import { sfx } from '../audio/sfx';
+import { EMOTES, PROTOCOL_VERSION, type ClientMsg, type GiftJoker, type PlayerInfo, type RoomMode, type ServerMsg } from './protocol';
 import type { OnlineState } from '../ui/store';
 
 const SESSION_KEY = 'trucado-online-session';
@@ -133,8 +134,29 @@ function handle(url: string, msg: ServerMsg) {
         o.mode = 'campaign';
         o.code = msg.code;
         o.camp = msg.view;
+        o.spectator = !!msg.spectator;
       });
-      campaignHandler?.(msg.code, msg.view);
+      // quem assiste não tem run: só olha a mesa
+      if (!msg.spectator) campaignHandler?.(msg.code, msg.view);
+      break;
+    case 'watching':
+      setOnline((o) => {
+        o.status = 'lobby';
+        o.spectator = true;
+        o.mode = msg.mode;
+        o.code = msg.code;
+        o.players = msg.players;
+      });
+      break;
+    case 'chat':
+      setOnline((o) => {
+        const line = { key: Date.now() + Math.random(), from: msg.from, text: msg.text, mine: msg.mine, spectator: msg.spectator };
+        o.chat = [...(o.chat ?? []), line].slice(-100);
+      });
+      if (!msg.mine) sfx('click');
+      break;
+    case 'cgift':
+      giftHandler?.(msg.from, msg.joker, !!msg.returned);
       break;
     case 'dstate':
       setOnline((o) => {
@@ -145,6 +167,7 @@ function handle(url: string, msg: ServerMsg) {
         o.seats = msg.seats;
         o.drematch = msg.rematch;
         o.rules = msg.view.rules;
+        o.spectator = !!msg.spectator;
       });
       break;
     case 'lobby':
@@ -166,6 +189,7 @@ function handle(url: string, msg: ServerMsg) {
         o.opp = msg.opp;
         o.rematch = msg.rematch;
         o.rules = msg.view.rules;
+        o.spectator = !!msg.spectator;
       });
       break;
     case 'emote': {
@@ -219,6 +243,21 @@ export function onlineResume(): boolean {
 export const onlineAct = (a: DuelAction | DuplasAction) => send({ t: 'act', a });
 /** Qualquer mensagem (a campanha manda as dela por aqui). */
 export const onlineSend = (msg: ClientMsg) => send(msg);
+export const onlineChat = (text: string) => send({ t: 'chat', text });
+export const onlineGift = (joker: GiftJoker) => send({ t: 'cgift', joker });
+
+/** Assiste uma sala pelo código (sem jogar; dá para conversar no chat). */
+export function onlineWatch(url: string, code: string, name: string): void {
+  saveSession(null);
+  update((s) => (s.online = { status: 'connecting', spectator: true }));
+  open(url, { t: 'watch', v: PROTOCOL_VERSION, code: code.trim().toUpperCase(), name });
+}
+
+/** Quem recebe os Coringas dados pelo parceiro (ui/campaignOnline.ts). */
+let giftHandler: ((from: string, joker: GiftJoker, returned: boolean) => void) | null = null;
+export function setGiftHandler(fn: (from: string, joker: GiftJoker, returned: boolean) => void): void {
+  giftHandler = fn;
+}
 
 /**
  * Quem cuida da campanha online (ui/campaignOnline.ts) se registra aqui, para este arquivo não

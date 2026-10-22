@@ -1,7 +1,7 @@
 {
   "name": "trucado",
   "productName": "Trucado",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Roguelike de deckbuilding no estilo Balatro sobre as regras do Truco Paulista, num boteco brasileiro.",
   "author": "Breno Nunes",
   "private": true,
@@ -17,7 +17,9 @@
     "lint": "eslint .",
     "simulate": "vite-node scripts/simulate.ts",
     "app": "npm run build && electron .",
-    "dist": "npm run build && electron-builder --win",
+    "dist": "npm run build && electron-builder --win --publish never",
+    "release": "npm run build && electron-builder --win --publish always",
+    "dist:web": "npm run build && node -e \"require('fs').mkdirSync('release',{recursive:true})\" && tar -a -c -f release/Trucado-web.zip -C dist .",
     "retratos": "node scripts/retratos/gerar.mjs",
     "retratos:prompts": "node scripts/retratos/gerar.mjs --prompts",
     "server": "vite-node server/index.ts",
@@ -56,6 +58,7 @@
     "files": [
       "dist/**/*",
       "electron/main.cjs",
+      "electron/preload.cjs",
       "electron/icon.png",
       "package.json"
     ],
@@ -79,9 +82,17 @@
     },
     "portable": {
       "artifactName": "Trucado-${version}-portatil.${ext}"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "BrenoNunesC",
+        "repo": "trucado"
+      }
+    ]
   },
   "dependencies": {
+    "electron-updater": "^6.8.9",
     "ws": "^8.22.0"
   }
 }
