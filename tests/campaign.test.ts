@@ -126,8 +126,8 @@ describe('Campanha em dupla online', () => {
   });
 
   it('dois jogadores, cada um com a própria run, vencem Blinds juntos e passam pela loja', async () => {
-    const a = await player(port, 'Ana', 'classico');
-    const b = await player(port, 'Beto', 'classico');
+    const a = await player(port, 'Ana', 'vermelho');
+    const b = await player(port, 'Beto', 'vermelho');
     a.send({ t: 'create', v: PROTOCOL_VERSION, player: { name: 'Ana', avatar: 'rosana' }, rules: { maoDeOnze: true, maoDeFerro: true }, mode: 'campaign' });
     await wait(50);
     b.send({ t: 'join', v: PROTOCOL_VERSION, code: a.code, player: { name: 'Beto', avatar: 'zeca' } });
@@ -160,7 +160,7 @@ describe('Campanha em dupla online', () => {
   }, 30_000);
 
   it('sozinho na sala: a IA vira o parceiro e só a sua meta conta', async () => {
-    const a = await player(port, 'Ana', 'classico');
+    const a = await player(port, 'Ana', 'vermelho');
     a.send({ t: 'create', v: PROTOCOL_VERSION, player: { name: 'Ana', avatar: 'rosana' }, rules: { maoDeOnze: false, maoDeFerro: false }, mode: 'campaign' });
     await wait(50);
     a.send({ t: 'start', stake: 1 });

@@ -64,7 +64,7 @@ function CampaignLobby() {
   const partner = seats[2];
   const [copied, setCopied] = useState(false);
   const [stake, setStake] = useState(1);
-  const deckId = o.campDeck ?? 'classico';
+  const deckId = o.campDeck ?? 'vermelho';
   const unlocked = (d: (typeof DECKS)[number]) => !d.unlockedBy || (p.stakesWon[d.unlockedBy] ?? 0) >= 1;
   const maxStake = Math.min(8, (p.stakesWon[deckId] ?? 0) + 1);
   const pickDeck = (id: string) => {

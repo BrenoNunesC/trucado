@@ -7,6 +7,7 @@ import { YouTubeField } from '../components/MusicWidget';
 import { sfx } from '../../audio/sfx';
 import { BOSSES } from '../../data/bosses';
 import { DECKS, STAKES } from '../../data/decks';
+import { CARD_THEMES } from '../../data/cardThemes';
 import { JOKERS, RARITY_NAME } from '../../data/jokers';
 import { makeCoop } from '../../engine/coop';
 import { newRun } from '../../engine/run';
@@ -94,7 +95,7 @@ export function Title() {
 export function NewRunScreen() {
   const s = useApp();
   const p = s.profile;
-  const [deckId, setDeck] = useState('classico');
+  const [deckId, setDeck] = useState('vermelho');
   const [stake, setStake] = useState(1);
   const [seed, setSeed] = useState(() => randomSeedString());
   const [partner, setPartner] = useState('bene');
@@ -325,6 +326,14 @@ export function SettingsScreen() {
           ).map(([v, label]) => (
             <button key={v} className={`btn small ${st.tableTheme === v ? 'primary' : ''}`} title={v === 'auto' ? 'Mesa de bar; sinuca nos chefes; churrasco no Ante 8.' : undefined} onClick={() => setSettings({ tableTheme: v })}>
               {label}
+            </button>
+          ))}
+        </div>
+        <div className="speed">
+          Tema das cartas:
+          {CARD_THEMES.map((t) => (
+            <button key={t.id} className={`btn small ${st.cardTheme === t.id ? 'primary' : ''}`} title={t.description} onClick={() => setSettings({ cardTheme: t.id })}>
+              {t.name}
             </button>
           ))}
         </div>

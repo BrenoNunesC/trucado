@@ -11,7 +11,7 @@ function arg(name: string, def: string): string {
 }
 
 const runs = Number(arg('runs', '1000'));
-const deckId = arg('deck', 'classico');
+const deckId = arg('deck', 'vermelho');
 const stake = Number(arg('stake', '1'));
 
 const reached = new Array(FINAL_ANTE + 2).fill(0); // reached[a] = runs que venceram o Chefe do Ante a

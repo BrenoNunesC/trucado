@@ -3,7 +3,7 @@
 import { blindTarget, CONSUMABLE_SLOTS, FINAL_ANTE, JOKER_SLOTS, START_MONEY } from '../data/balance';
 import { BOSSES } from '../data/bosses';
 import { initialLevels } from '../data/categories';
-import { DECK_BY_ID, stakeTargetFactor } from '../data/decks';
+import { DECK_BY_ID, DECK_DEFAULT, stakeTargetFactor } from '../data/decks';
 import { OPPONENTS, type OpponentDef } from '../data/opponents';
 import { TAG_BY_ID, TAGS } from '../data/tags';
 import { startBlind } from './blind';
@@ -24,7 +24,7 @@ export interface NewRunParams {
 
 export function newRun(p: NewRunParams): RunState {
   const seed = p.seed.toUpperCase();
-  const deck = DECK_BY_ID[p.deckId] ?? DECK_BY_ID.classico;
+  const deck = DECK_BY_ID[p.deckId] ?? DECK_BY_ID[DECK_DEFAULT];
   const rng = createRng(seed);
   const run: RunState = {
     version: 1,
@@ -212,6 +212,7 @@ export function collectCashout(run: RunState): number {
   if (isBoss) {
     run.stats.bossesDefeated += 1;
     run.tags = run.tags.filter((t) => t !== 'investimento');
+    if (DECK_BY_ID[run.deckId]?.dobroAposChefe) run.tags.push('dobro');
     for (const r of resolvedJokers(activeJokers(run, blind))) {
       r.def.bossDefeated?.(
         { run, blind, money: (n) => void (run.money += n), addConsumable: (k, id) => addConsumable(run, k, id) },

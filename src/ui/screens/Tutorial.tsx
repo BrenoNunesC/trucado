@@ -17,7 +17,7 @@ type Step = 'vira' | 'forca' | 'truco' | 'play1' | 'canga' | 'score';
 
 function setup() {
   // run descartável: nunca vai para o store nem para o save
-  const run = newRun({ seed: 'TUTORIAL', deckId: 'classico', stake: 1 });
+  const run = newRun({ seed: 'TUTORIAL', deckId: 'vermelho', stake: 1 });
   selectBlind(run);
   const zap = makeCard('Q', 'paus');
   const tres = makeCard('3', 'copas');

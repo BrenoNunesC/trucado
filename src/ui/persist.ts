@@ -27,6 +27,8 @@ export interface Settings {
   crt: boolean;
   /** Cenário da mesa; "auto" troca sozinho (sinuca nos chefes, churrasco no Ante 8). */
   tableTheme: TableThemeSetting;
+  /** Tema visual das cartas (ver data/cardThemes.ts). */
+  cardTheme: string;
   /** 1 = normal, 2 = rápida, 3 = turbo */
   speed: 1 | 2 | 3;
   screenShake: boolean;
@@ -54,6 +56,7 @@ export const DEFAULT_SETTINGS: Settings = {
   muted: false,
   crt: true,
   tableTheme: 'auto',
+  cardTheme: 'classico',
   speed: 1,
   screenShake: true,
   reducedMotion: false,

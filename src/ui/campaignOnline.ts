@@ -20,7 +20,7 @@ function handle(code: string, view: CampView): void {
   let run = s.run?.coop?.online?.code === code ? s.run : loadOnlineRun(code);
   if (!run) {
     const you = { name: s.settings.onlineName.trim() || 'Você', avatar: s.settings.onlineAvatar, personality: 'equilibrado' as const };
-    run = createCampaignRun(view, code, s.online?.campDeck ?? 'classico', you, lockedJokerIds(s.profile));
+    run = createCampaignRun(view, code, s.online?.campDeck ?? 'vermelho', you, lockedJokerIds(s.profile));
   }
   if (s.run !== run) {
     const r = run;

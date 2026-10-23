@@ -4,6 +4,7 @@ import { JOKERS } from '../src/data/jokers';
 import { finishHand } from '../src/engine/blind';
 import { makeCard, type Rank, type Suit } from '../src/engine/cards';
 import { detectCategory } from '../src/engine/handFacts';
+import { DECKS } from '../src/data/decks';
 import { addJoker, applyConsumable, addConsumable } from '../src/engine/inventory';
 import { collectCashout, newRun, selectBlind, skipBlind } from '../src/engine/run';
 import { scoreHand } from '../src/engine/scoring';
@@ -14,7 +15,7 @@ type F = [Rank, Suit];
 const card = ([r, s]: F) => makeCard(r, s);
 
 function setup(jokers: string[] = []): RunState {
-  const run = newRun({ seed: 'TESTE', deckId: 'classico', stake: 1 });
+  const run = newRun({ seed: 'TESTE', deckId: 'vermelho', stake: 1 });
   for (const id of jokers) addJoker(run, id);
   selectBlind(run);
   return run;
@@ -291,7 +292,7 @@ describe('Blind e economia', () => {
   });
 
   it('pular o Blind dá a Tag', () => {
-    const run = newRun({ seed: 'PULO', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'PULO', deckId: 'vermelho', stake: 1 });
     run.blinds[0].tagId = 'caixinha';
     const m = run.money;
     skipBlind(run);
@@ -302,13 +303,13 @@ describe('Blind e economia', () => {
 
 describe('Determinismo', () => {
   it('a mesma seed produz a mesma run', () => {
-    const a = autoRun(newRun({ seed: 'MESMA', deckId: 'classico', stake: 1 }));
-    const b = autoRun(newRun({ seed: 'MESMA', deckId: 'classico', stake: 1 }));
+    const a = autoRun(newRun({ seed: 'MESMA', deckId: 'vermelho', stake: 1 }));
+    const b = autoRun(newRun({ seed: 'MESMA', deckId: 'vermelho', stake: 1 }));
     expect(a).toEqual(b);
   });
 
   it('runs automáticas de todos os decks terminam sem erro', () => {
-    for (const deckId of ['classico', 'sujo', 'bar', 'compadre', 'rezado', 'bicho', 'paus', 'fiado', 'enxuto']) {
+    for (const deckId of DECKS.map((d) => d.id)) {
       for (let i = 0; i < 5; i++) {
         const r = autoRun(newRun({ seed: `D${deckId}${i}`, deckId, stake: 1 + (i % 8) }));
         expect(r.ante).toBeGreaterThanOrEqual(1);

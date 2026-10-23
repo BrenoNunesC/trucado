@@ -2,6 +2,7 @@
 
 import { BET_MULT, EDITION_CHIPS, EDITION_MULT, EDITION_XMULT, GOLD_SEAL_MONEY } from '../data/balance';
 import { CATEGORY_BY_ID, categoryValues } from '../data/categories';
+import { DECK_BY_ID } from '../data/decks';
 import { cardChips, cardLabel, SUIT_NAME } from './cards';
 import { cardIsManilha, detectCategory, manilhasPlayed, ties } from './handFacts';
 import { addConsumable, jokerDef, resolvedJokers } from './inventory';
@@ -127,6 +128,18 @@ export function scoreHand(run: RunState, blind: BlindState, hand: TrucoHand): Sc
     if (c.seal !== 'azul') continue;
     ref = c.id;
     if (addConsumable(run, 'giria', `giria_${category}`)) push({ label: 'Selo Azul: +1 Gíria' });
+  }
+
+  // Baralho Batida: Fichas e Mult viram a média dos dois antes do total
+  const deck = DECK_BY_ID[run.deckId];
+  if (deck?.balancaFichas) {
+    const media = (chips + mult) / 2;
+    const dc = media - chips;
+    const dm = media - mult;
+    chips = media;
+    mult = media;
+    source = 'base';
+    push({ label: `${deck.name}: Fichas e Mult se igualam`, chips: dc, mult: dm });
   }
 
   return {

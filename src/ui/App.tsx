@@ -98,7 +98,7 @@ export function App() {
   const info = run && (run.blind?.info ?? (run.phase === 'select' ? run.blinds[run.blindIndex] : null));
   const tone = run?.phase === 'shop' ? 'loja' : info?.kind ?? '';
   const bossColor = info?.bossId ? BOSS_BY_ID[info.bossId]?.color : undefined;
-  const cls = ['app', tone && `tone-${tone}`, s.settings.crt ? 'crt-on' : '', s.settings.reducedMotion ? 'reduced' : ''].join(' ');
+  const cls = ['app', tone && `tone-${tone}`, `card-theme-${s.settings.cardTheme}`, s.settings.crt ? 'crt-on' : '', s.settings.reducedMotion ? 'reduced' : ''].join(' ');
   return (
     <div className={cls} style={bossColor ? { ['--boss-tone' as string]: bossColor } : undefined}>
       <div className="swirl-bg" aria-hidden />

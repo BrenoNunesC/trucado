@@ -14,6 +14,7 @@ import {
   VOUCHER_PRICE,
 } from '../data/balance';
 import { CONSUMABLE_BY_ID } from '../data/consumables';
+import { DECK_BY_ID } from '../data/decks';
 import { PACK_BY_ID, PACKS } from '../data/packs';
 import { VOUCHER_BY_ID, VOUCHERS } from '../data/vouchers';
 import { makeCard, RANKS, SUITS, type Card, type Edition, type Seal } from './cards';
@@ -68,7 +69,9 @@ export function cardPrice(run: RunState, card: Card): number {
 }
 
 function shopItem(run: RunState, exclude: string[]): ShopItem {
-  const kind = weighted(run.rng, Object.keys(SHOP_WEIGHTS) as (keyof typeof SHOP_WEIGHTS)[], (k) => SHOP_WEIGHTS[k]);
+  const sorteio: [string, number][] = Object.entries(SHOP_WEIGHTS);
+  if (DECK_BY_ID[run.deckId]?.mandingasNaLoja) sorteio.push(['mandinga', 12]);
+  const kind = weighted(run.rng, sorteio, ([, w]) => w)[0] as 'joker' | 'card' | 'tarot' | 'giria' | 'mandinga';
   if (kind === 'joker') {
     const id = randomJokerId(run, undefined, exclude);
     const edition = rollJokerEdition(run);

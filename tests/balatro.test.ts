@@ -10,7 +10,7 @@ type F = [Rank, Suit];
 const card = ([r, s]: F) => makeCard(r, s);
 
 function setup(jokers: string[]): RunState {
-  const run = newRun({ seed: 'BALATRO', deckId: 'classico', stake: 1 });
+  const run = newRun({ seed: 'BALATRO', deckId: 'vermelho', stake: 1 });
   for (const id of jokers) addJoker(run, id);
   selectBlind(run);
   return run;

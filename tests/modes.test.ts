@@ -70,7 +70,7 @@ describe('IA não trapaceia', () => {
 
 describe('Loja e economia', () => {
   it('rolar fica mais caro a cada uso', () => {
-    const run = newRun({ seed: 'LOJA', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'LOJA', deckId: 'vermelho', stake: 1 });
     run.money = 100;
     generateShop(run);
     const c1 = rerollCost(run);
@@ -80,7 +80,7 @@ describe('Loja e economia', () => {
   });
 
   it('comprar Coringa desconta o preço e ocupa slot; sem dinheiro falha', () => {
-    const run = newRun({ seed: 'LOJA2', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'LOJA2', deckId: 'vermelho', stake: 1 });
     generateShop(run);
     run.shop!.items[0] = { kind: 'joker', id: 'pinguco', price: 4 };
     run.money = 3;
@@ -92,7 +92,7 @@ describe('Loja e economia', () => {
   });
 
   it('pacote abre opções e a escolha vai para o inventário', () => {
-    const run = newRun({ seed: 'PACK', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'PACK', deckId: 'vermelho', stake: 1 });
     run.money = 50;
     generateShop(run);
     run.shop!.packs[0] = { id: 'coringas', price: 5 };
@@ -104,7 +104,7 @@ describe('Loja e economia', () => {
   });
 
   it('Tags de loja: Camelô dá Coringa Incomum grátis', () => {
-    const run = newRun({ seed: 'TAG', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'TAG', deckId: 'vermelho', stake: 1 });
     gainTag(run, 'incomum');
     generateShop(run);
     const free = run.shop!.items.find((i) => i.price === 0 && i.kind === 'joker');
@@ -112,7 +112,7 @@ describe('Loja e economia', () => {
   });
 
   it('Tarô O Garçom muda o naipe das cartas escolhidas', () => {
-    const run = newRun({ seed: 'TARO', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'TARO', deckId: 'vermelho', stake: 1 });
     addConsumable(run, 'tarot', 'garcom');
     const targets = run.deck.filter((c) => c.suit === 'copas').slice(0, 3).map((c) => c.id);
     expect(applyConsumable(run, run.consumables[0].uid, targets).ok).toBe(true);
@@ -120,7 +120,7 @@ describe('Loja e economia', () => {
   });
 
   it('blefe troca cartas e gasta 1 blefe', () => {
-    const run = newRun({ seed: 'BLEFE', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'BLEFE', deckId: 'vermelho', stake: 1 });
     selectBlind(run);
     const b = run.blind!;
     const hand = b.hand!;
@@ -148,7 +148,7 @@ describe('Adversários e chefes', () => {
   it('Pequeno e Grande têm personagens diferentes; Ante 8 traz um chefe final', async () => {
     const { BOSS_BY_ID } = await import('../src/data/bosses');
     const { generateAnte } = await import('../src/engine/run');
-    const run = newRun({ seed: 'ELENCO', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'ELENCO', deckId: 'vermelho', stake: 1 });
     const [p, g, c] = run.blinds;
     expect(p.opponentId).toBeTruthy();
     expect(p.opponentId).not.toBe(g.opponentId);
@@ -175,7 +175,7 @@ describe('Adversários e chefes', () => {
 
 describe('A vira sai do baralho do jogador', () => {
   const novaRun = (deckRank: '5' | '4') => {
-    const run = newRun({ seed: 'VIRA', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'VIRA', deckId: 'vermelho', stake: 1 });
     run.deck = Array.from({ length: 14 }, () => makeCard(deckRank, 'ouros'));
     selectBlind(run);
     return run;
@@ -222,7 +222,7 @@ describe('A vira sai do baralho do jogador', () => {
 });
 
 describe('Vouchers novos', () => {
-  const nova = () => newRun({ seed: 'VOUCHER', deckId: 'classico', stake: 1 });
+  const nova = () => newRun({ seed: 'VOUCHER', deckId: 'vermelho', stake: 1 });
 
   it('Cortesia da Casa, Prateleira e Balcão Cheio mudam a loja', () => {
     const run = nova();
@@ -246,7 +246,7 @@ describe('Vouchers novos', () => {
   it('vouchers de nível 2 só aparecem depois do nível 1', () => {
     const nivel2 = ['balcaoCheio', 'fiadoEterno', 'gorjetao', 'mesaRedonda', 'caraDeMadeira', 'setteVidas'];
     for (let i = 0; i < 40; i++) {
-      const run = newRun({ seed: `LOJA${i}`, deckId: 'classico', stake: 1 });
+      const run = newRun({ seed: `LOJA${i}`, deckId: 'vermelho', stake: 1 });
       const id = generateShop(run).voucher?.id;
       expect(nivel2).not.toContain(id);
     }
@@ -286,7 +286,7 @@ describe('A manilha pula valores que não existem no baralho', () => {
   });
 
   it('numa mão da campanha, a manilha é sempre um valor do baralho', () => {
-    const run = newRun({ seed: 'PULA', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'PULA', deckId: 'vermelho', stake: 1 });
     run.deck = [
       ...Array.from({ length: 7 }, () => makeCard('5', 'ouros')),
       ...Array.from({ length: 7 }, () => makeCard('7', 'copas')),

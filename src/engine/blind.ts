@@ -42,7 +42,7 @@ export function buildRules(run: RunState, info: BlindInfo): BlindRules {
   const deck = DECK_BY_ID[run.deckId];
   const rules: BlindRules = {
     hands: DEFAULT_HANDS + (deck?.handsDelta ?? 0),
-    bluffs: DEFAULT_BLUFFS,
+    bluffs: DEFAULT_BLUFFS + (deck?.bluffsDelta ?? 0),
     noBets: false,
     rotatingVira: false,
     hideVira: false,
@@ -469,8 +469,10 @@ export function computeCashout(run: RunState): CashoutLine[] {
   const kind = blind.info.kind;
   const reward = kind === 'pequeno' && run.stake >= 2 ? 0 : BLIND_REWARD[kind];
   lines.push({ label: `Vitória no ${blind.info.name}`, amount: reward });
-  const perHand = MONEY_PER_UNUSED_HAND + (hasVoucher(run, 'caderninho') ? 1 : 0);
+  const deck = DECK_BY_ID[run.deckId];
+  const perHand = deck?.pagaSobras ? 2 : MONEY_PER_UNUSED_HAND + (hasVoucher(run, 'caderninho') ? 1 : 0);
   if (blind.handsLeft > 0) lines.push({ label: `${blind.handsLeft} mão(s) não usada(s)`, amount: blind.handsLeft * perHand });
+  if (deck?.pagaSobras && blind.bluffsLeft > 0) lines.push({ label: `${blind.bluffsLeft} blefe(s) sobrando`, amount: blind.bluffsLeft });
   if (hasVoucher(run, 'cobrador')) lines.push({ label: 'Cobrador', amount: 2 });
   const i = interest(run);
   if (i > 0) lines.push({ label: `Juros (1 a cada $${INTEREST_STEP})`, amount: i });

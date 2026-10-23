@@ -7,7 +7,7 @@ const inst = (id: string, state: Record<string, number> = {}): JokerInstance => 
 
 describe('Runs salvas com Coringas removidos', () => {
   it('troca pelo correlato e mantém fichas, Mult e × do estado', () => {
-    const run = newRun({ seed: 'MIGRA', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'MIGRA', deckId: 'vermelho', stake: 1 });
     run.jokers = [inst('bolinho', { chips: 35 }), inst('globoEspelhado', { x: 1.75 }), inst('caderneta'), inst('pochete')];
     migrateRemovedJokers(run);
     expect(run.jokers.map((j) => j.id)).toEqual(['torresmo', 'mapinguari', 'coxinha', 'bicheiro']);
@@ -17,7 +17,7 @@ describe('Runs salvas com Coringas removidos', () => {
   });
 
   it('retira Coringas que não existem e não tem correlato', () => {
-    const run = newRun({ seed: 'MIGRA2', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'MIGRA2', deckId: 'vermelho', stake: 1 });
     run.jokers = [inst('fantasma'), inst('passista')];
     migrateRemovedJokers(run);
     expect(run.jokers.map((j) => j.id)).toEqual(['passista']);

@@ -33,7 +33,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'lendario', name: 'Lenda do bar', desc: 'Tenha um Coringa lendário.', check: (_, r) => !!r?.jokers.some((j) => LEGENDARY.has(j.id)) },
   { id: 'colecionador', name: 'Colecionador', desc: 'Descubra 40 Coringas.', check: (p) => p.discoveredJokers.length >= 40 },
   { id: 'faxina', name: 'Faxina no baralho', desc: 'Destrua 10 cartas numa run.', check: (_, r) => (r?.stats.cardsDestroyed ?? 0) >= 10 },
-  { id: 'baralhos', name: 'Baralho novo', desc: 'Vença uma run com um baralho que não seja o Clássico.', check: (p) => Object.entries(p.stakesWon).some(([id, s]) => id !== 'classico' && s > 0) },
+  { id: 'baralhos', name: 'Baralho novo', desc: 'Vença uma run com um baralho que não seja o Clássico.', check: (p) => Object.entries(p.stakesWon).some(([id, s]) => id !== 'vermelho' && s > 0) },
   { id: 'livre', name: 'Truco de verdade', desc: 'Vença 5 partidas no modo livre.', check: (p) => p.freeWins >= 5 },
   { id: 'duplas', name: 'Parceria', desc: 'Vença uma partida em duplas.', check: (p) => (p.duplasWins ?? 0) >= 1 },
   { id: 'online', name: 'Fama na rua', desc: 'Vença uma partida online.', check: (p) => (p.onlineWins ?? 0) >= 1 },

@@ -28,7 +28,7 @@ describe('Coringas trancados', () => {
   });
 
   it('a run nunca sorteia um Coringa trancado', () => {
-    const run = newRun({ seed: 'TRANCADOS', deckId: 'classico', stake: 1, lockedJokers: Object.keys(JOKER_UNLOCKS) });
+    const run = newRun({ seed: 'TRANCADOS', deckId: 'vermelho', stake: 1, lockedJokers: Object.keys(JOKER_UNLOCKS) });
     for (let i = 0; i < 300; i++) {
       expect(JOKER_UNLOCKS[randomJokerId(run, 'comum')]).toBeUndefined();
       expect(JOKER_UNLOCKS[randomJokerId(run, 'lendario')]).toBeUndefined();

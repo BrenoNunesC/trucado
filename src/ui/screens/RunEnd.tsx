@@ -58,7 +58,7 @@ export function RunEnd() {
     ['Dinheiro ganho', `$${st.moneyEarned}`],
     ['Coringas vendidos', `${st.jokersSold}`],
     ['Cartas destruídas', `${st.cardsDestroyed}`],
-    ['Deck / Stake', `${DECK_BY_ID[run.deckId].name} · ${STAKES[run.stake - 1].name}`],
+    ['Deck / Stake', `${DECK_BY_ID[run.deckId]?.name ?? run.deckId} · ${STAKES[run.stake - 1].name}`],
   ];
 
   return (

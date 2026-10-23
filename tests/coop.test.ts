@@ -46,7 +46,7 @@ describe('Campanha em dupla: runs inteiras', () => {
     let blindsWon = 0;
     let scored = 0;
     for (let g = 0; g < 10; g++) {
-      const run = newRun({ seed: `COOP${g}`, deckId: 'classico', stake: 1, options: { maoDeOnze: g % 2 === 0, maoDeFerro: g % 3 === 0 } });
+      const run = newRun({ seed: `COOP${g}`, deckId: 'vermelho', stake: 1, options: { maoDeOnze: g % 2 === 0, maoDeFerro: g % 3 === 0 } });
       makeCoop(run, 'bene', 'rosana');
       for (let blindNo = 0; blindNo < 6 && run.phase === 'select'; blindNo++) {
         selectBlind(run);
@@ -72,7 +72,7 @@ describe('Campanha em dupla: runs inteiras', () => {
   });
 
   it('o blefe troca as suas cartas também na mesa em dupla', () => {
-    const run = newRun({ seed: 'BLEFE', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'BLEFE', deckId: 'vermelho', stake: 1 });
     makeCoop(run, 'bene');
     selectBlind(run);
     // espera a sua vez sem você ter jogado
@@ -117,7 +117,7 @@ describe('Projeção da mão em duplas', () => {
   it('Coringa pontua quando a dupla fecha (Fechador: +12 Mult na Jogada Fechou)', () => {
     let fechou = 0;
     for (let g = 0; g < 40 && fechou === 0; g++) {
-      const run = newRun({ seed: `FECHA${g}`, deckId: 'classico', stake: 1 });
+      const run = newRun({ seed: `FECHA${g}`, deckId: 'vermelho', stake: 1 });
       makeCoop(run, 'bene');
       addJoker(run, 'fechador');
       selectBlind(run);
@@ -133,7 +133,7 @@ describe('Projeção da mão em duplas', () => {
 
 describe('Chefes na mesa de quatro', () => {
   it('O Pé-Frio: a canga conta para a dupla adversária', () => {
-    const run = newRun({ seed: 'PEFRIO', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'PEFRIO', deckId: 'vermelho', stake: 1 });
     makeCoop(run, 'bene');
     run.blindIndex = 2;
     run.blinds[2].bossId = 'peFrio';
@@ -142,7 +142,7 @@ describe('Chefes na mesa de quatro', () => {
   });
 
   it('você responde às apostas pela sua dupla, mesmo quando o adversário à sua frente pede', () => {
-    const run = newRun({ seed: 'VOZ', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'VOZ', deckId: 'vermelho', stake: 1 });
     makeCoop(run, 'bene');
     selectBlind(run);
     const h = coopHand(run);

@@ -4780,3 +4780,38 @@ h3.rarity-raro,
     max-width: none;
   }
 }
+
+/* ------------------------------------------------------------ temas visuais das cartas
+   Trocam só o verso e a face. A classe vai no .app (ver Configurações → Vídeo). */
+.card-theme-festa .card-inner {
+  background: #fff6dc;
+  border-color: #ffd34d;
+}
+.card-theme-festa .card-back .card-inner {
+  background: repeating-conic-gradient(#c8302a 0 25%, #fff6dc 0 50%) 0 0 / 16px 16px;
+  border-color: #ffd34d;
+}
+.card-theme-festa .back-pattern {
+  color: #ffd34d;
+  border-color: rgba(255, 211, 77, 0.8);
+}
+.card-theme-carnaval .card-inner {
+  background: #f6eefe;
+  border-color: #e8b84a;
+}
+.card-theme-carnaval .card-back .card-inner {
+  background: linear-gradient(135deg, #5b2a86, #2a0f47 60%, #7a3fb0);
+  border-color: #e8b84a;
+}
+.card-theme-carnaval .back-pattern {
+  color: #e8b84a;
+  border-color: rgba(232, 184, 74, 0.8);
+}
+.card-theme-bar .card-back .card-inner {
+  background: repeating-linear-gradient(0deg, #ff3ea5 0 2px, transparent 2px 10px), #0d1b3d;
+  border-color: #3de0ff;
+}
+.card-theme-bar .back-pattern {
+  color: #3de0ff;
+  border-color: rgba(61, 224, 255, 0.8);
+}

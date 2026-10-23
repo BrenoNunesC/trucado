@@ -21,7 +21,7 @@ type F = [Rank, Suit];
 const card = ([r, s]: F) => makeCard(r, s);
 
 function setup(jokers: string[] = []): RunState {
-  const run = newRun({ seed: 'CONTEUDO', deckId: 'classico', stake: 1 });
+  const run = newRun({ seed: 'CONTEUDO', deckId: 'vermelho', stake: 1 });
   for (const id of jokers) addJoker(run, id);
   selectBlind(run);
   return run;
@@ -131,7 +131,7 @@ describe('Coringas da segunda leva', () => {
 });
 
 describe('Tarôs e Mandingas da segunda leva', () => {
-  const nova = () => newRun({ seed: 'MAIS', deckId: 'classico', stake: 1 });
+  const nova = () => newRun({ seed: 'MAIS', deckId: 'vermelho', stake: 1 });
   const usar = (run: RunState, id: string, alvos: string[] = []) => {
     addConsumable(run, CONSUMABLE_BY_ID[id].kind, id);
     return applyConsumable(run, run.consumables.at(-1)!.uid, alvos);
@@ -267,7 +267,7 @@ describe('Chefes, fregueses, Tags, vouchers e pacotes novos', () => {
 
   it('todo chefe aplica suas regras e deixa o Blind jogável', () => {
     for (const b of BOSSES) {
-      const run = newRun({ seed: 'CHEFES', deckId: 'classico', stake: 1 });
+      const run = newRun({ seed: 'CHEFES', deckId: 'vermelho', stake: 1 });
       addJoker(run, 'pinguco');
       const r = buildRules(run, { ...run.blinds[2], bossId: b.id });
       expect(r.hands, b.id).toBeGreaterThanOrEqual(1);
@@ -288,7 +288,7 @@ describe('Chefes, fregueses, Tags, vouchers e pacotes novos', () => {
   });
 
   it('as Tags novas funcionam', () => {
-    const run = newRun({ seed: 'TAGS', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'TAGS', deckId: 'vermelho', stake: 1 });
     addJoker(run, 'pinguco');
     addJoker(run, 'paoDeQueijo');
     run.money = 0;
@@ -299,11 +299,11 @@ describe('Chefes, fregueses, Tags, vouchers e pacotes novos', () => {
     run.pack = null;
     gainTag(run, 'blefe');
     selectBlind(run);
-    expect(run.blind!.bluffsLeft).toBe(4);
+    expect(run.blind!.bluffsLeft).toBe(5); // 3 base + 1 do Baralho da Canga + 1 da Tag
   });
 
   it('Tag do Brilho traz um Coringa com edição de graça; Tag do Fiado corta o preço', () => {
-    const run = newRun({ seed: 'LOJA2', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'LOJA2', deckId: 'vermelho', stake: 1 });
     run.tags.push('desconto', 'brilho');
     const shop = generateShop(run);
     const brilho = shop.items[shop.items.length - 1];
@@ -313,7 +313,7 @@ describe('Chefes, fregueses, Tags, vouchers e pacotes novos', () => {
   });
 
   it('Cobrador soma $2 ao prêmio e Amigo do Dono baixa a rolagem', () => {
-    const run = newRun({ seed: 'COBR', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'COBR', deckId: 'vermelho', stake: 1 });
     selectBlind(run);
     const base = computeCashout(run).reduce((a, l) => a + l.amount, 0);
     run.vouchers.push('cobrador');
@@ -329,7 +329,7 @@ describe('Chefes, fregueses, Tags, vouchers e pacotes novos', () => {
   });
 
   it('Baralho Novo e Bolso Sem Fundo agem na compra', () => {
-    const run = newRun({ seed: 'COMPRA', deckId: 'classico', stake: 1 });
+    const run = newRun({ seed: 'COMPRA', deckId: 'vermelho', stake: 1 });
     const v = VOUCHERS.find((x) => x.id === 'baralhoNovo')!;
     const antes = run.deck.length;
     v.onBuy!(run);
@@ -340,19 +340,20 @@ describe('Chefes, fregueses, Tags, vouchers e pacotes novos', () => {
   });
 
   it('os baralhos novos começam do jeito descrito', () => {
-    const paus = newRun({ seed: 'D1', deckId: 'paus', stake: 1 });
-    expect(paus.deck.length).toBe(40);
-    expect(paus.deck.every((c) => c.suit === 'paus')).toBe(true);
-    expect(paus.jokers.map((j) => j.id)).toEqual(['lenhador']);
+    const xadrez = newRun({ seed: 'D1', deckId: 'xadrez', stake: 1 });
+    expect(xadrez.deck.length).toBe(40);
+    expect(xadrez.deck.every((c) => c.suit === 'espadas' || c.suit === 'copas')).toBe(true);
 
-    const fiado = newRun({ seed: 'D2', deckId: 'fiado', stake: 1 });
-    expect(fiado.money).toBe(0);
-    expect(fiado.jokers.length).toBe(2);
+    const amarelo = newRun({ seed: 'D2', deckId: 'amarelo', stake: 1 });
+    expect(amarelo.money).toBe(newRun({ seed: 'D2', deckId: 'vermelho', stake: 1 }).money + 10);
 
-    const enxuto = newRun({ seed: 'D3', deckId: 'enxuto', stake: 1 });
-    expect(enxuto.deck.length).toBe(24);
-    expect(enxuto.deck.some((c) => ['4', '5', '6', '7'].includes(c.rank))).toBe(false);
-    expect(enxuto.jokers.map((j) => j.id)).toEqual(['maoDeVaca']);
+    const abandonado = newRun({ seed: 'D3', deckId: 'abandonado', stake: 1 });
+    expect(abandonado.deck.length).toBe(40);
+    expect(abandonado.deck.some((c) => ['Q', 'J', 'K'].includes(c.rank))).toBe(false);
+
+    const magico = newRun({ seed: 'D4', deckId: 'magico', stake: 1 });
+    expect(magico.consumables.length).toBe(2);
+    expect(magico.vouchers).toContain('vitrine');
   });
 });
 
