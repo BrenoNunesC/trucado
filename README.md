@@ -90,15 +90,15 @@ Outros comandos:
 | `npm run dist:web` | versão de navegador zipada em `release/Trucado-web.zip` (para o itch.io) |
 | `npm run retratos` | gera os retratos realistas pela API de imagem (veja `scripts/retratos/`) |
 
-`npm run simulate -- --runs 300 --deck sujo --stake 3` muda quantidade, deck e stake.
+`npm run simulate -- --runs 300 --deck batida --stake 3` muda quantidade, deck e stake (ids em `src/data/decks.ts`).
 
 ## Como jogar
 
-1. **Nova run**: escolha um baralho, uma stake (dificuldade) e uma seed (ou sorteie). A mesma seed
-   gera a mesma run.
+1. **Nova run**: escolha um baralho (veja [Baralhos](#baralhos)), uma stake (dificuldade) e uma seed
+   (ou sorteie). A mesma seed gera a mesma run.
 2. Cada **Ante** tem três Blinds: Pequeno, Grande e Chefe. O Pequeno e o Grande podem ser
    **pulados** em troca de uma **Tag** (recompensa). O Chefe sempre muda alguma regra.
-3. Num Blind você tem **4 mãos** e **3 blefes** para fazer a meta de pontos. Cada mão é uma mão de
+3. Num Blind você tem **4 mãos** e **3 blefes** (4 com o Baralho da Canga) para fazer a meta de pontos. Cada mão é uma mão de
    truco normal contra a IA.
 4. **Blefe**: antes de jogar sua primeira carta da mão, selecione até 2 cartas e troque por novas.
 5. Vencer a mão pontua **Fichas × Mult**. Perder não pontua — e, se havia aposta aceita, custa
@@ -109,6 +109,49 @@ Outros comandos:
 
 Há também o **Modo livre** (truco clássico até 12, com Mão de Onze e Mão de Ferro) e um
 **Tutorial** de uma mão.
+
+### Baralhos
+
+Cada run começa com um baralho. Os 15 baralhos são inspirados no Balatro e adaptados ao Truco. Você
+desbloqueia cada um vencendo uma run com o baralho anterior da lista (o Baralho da Canga já vem
+liberado).
+
+| Baralho | Efeito |
+| --- | --- |
+| **Da Canga** | +1 blefe em todo Blind (padrão) |
+| **Do Pagode** | +1 mão em todo Blind |
+| **Da Féria** | Começa com $10 a mais |
+| **Da Gorjeta** | No fim do Blind: $2 por mão não usada e $1 por blefe que sobrou. Sem juros |
+| **Do Bicheiro** | +1 slot de Coringa, mas −1 mão em todo Blind |
+| **Da Cartomante** | Começa com 2 Tarôs de Boteco e o vale Vitrine |
+| **Da Neblina** | Começa com o vale Mesa Maior, mas −1 slot de consumível |
+| **Assombrado** | Mandingas podem aparecer na loja; começa com 1 Mandinga |
+| **Sem Figuras** | Sem Q, J e K; as 40 cartas são completadas com números repetidos |
+| **Xadrez** | Só Espadas e Copas, com cada carta em dobro |
+| **Do Horóscopo** | Começa com os vales Liquidação, Vitrine e Prateleira de Pacotes |
+| **Pintado** | +1 slot de consumível, mas −1 slot de Coringa |
+| **3D** | Depois de cada Chefe vencido, ganha a Tag do Dobro |
+| **Batida** | Ao pontuar, Fichas e Mult viram a média dos dois. Metas dobradas |
+| **Maluco** | Valores e naipes de todas as cartas são sorteados ao acaso |
+
+### Temas visuais
+
+Em **Configurações → Vídeo e acessibilidade → Tema das cartas** dá para trocar o verso e a face
+das cartas: Clássico, Festa Junina, Carnaval e Noite de Bar. O tema não muda as regras. Os temas
+ficam em `src/data/cardThemes.ts` e o estilo em `src/ui/styles.css` (blocos `card-theme-*`).
+
+### Coringas trancados
+
+Alguns Coringas começam trancados e só entram nas lojas, nos pacotes e na Coleção depois de cumprir
+uma condição, como no Balatro (por exemplo, vender 3 Coringas numa run ou fazer uma mão de 1.000
+pontos). A Coleção mostra o cadeado e a condição. Quando uma condição é cumprida, aparece o aviso
+"Coringa desbloqueado". As condições ficam em `src/data/unlocks.ts`.
+
+### Modo administrador
+
+Em **Configurações → Administrador** liga tudo: baralhos, stakes, Coringas e conquistas, e põe o
+painel do administrador no Menu (`Esc`) durante a run. Ao ligar, o jogo guarda o seu progresso;
+ao desligar, ele volta a esse progresso.
 
 ### Atalhos
 
@@ -194,11 +237,13 @@ Ganchos disponíveis (todos opcionais), definidos em `src/engine/jokerApi.ts`:
 | `beforeScore(ctx, self)` | antes de tudo | Coringas que escalam (alterar `self.state`) |
 | `handEnd(ctx, self)` | fim de toda mão | dinheiro mesmo perdendo, contadores, `self.state.destroyed = 1` |
 | `blindStart` / `blindEnd` / `bossDefeated` | ciclo do Blind | alterar mãos, pagar no fim, escalar por Chefe |
-| `passive` | sempre | `hidesVira`, `rerollDiscount`, `firstLossFree`, `copyRight` |
+| `passive` | sempre | `hidesVira`, `rerollDiscount`, `firstLossFree`, `copyRight` (Boto), `allowDuplicates` (Showman: repetidos podem aparecer na loja e nos pacotes) |
 
 `ctx` traz a mão (`ctx.hand`), a Jogada (`ctx.category`), o nível da aposta (`ctx.betLevel`), as
 rodadas vencidas (`ctx.roundsWon`), cangas, manilhas jogadas e o estado da run. Use `initialState`
 para contadores próprios e mostre-os na `description(self)`.
+
+Para trancar um Coringa até uma condição, adicione uma entrada em `JOKER_UNLOCKS` (`src/data/unlocks.ts`).
 
 ## Campanha em dupla
 
@@ -277,7 +322,8 @@ src/
             coop.ts (campanha em dupla), campaign.ts (o que a campanha online compartilha)
   net/      protocolo e cliente do modo online
   data/     tabelas: jokers/ (registro automático), chefes, tags, vouchers, consumíveis, pacotes,
-            decks e stakes, falas, balance.ts (fórmulas de meta e preços)
+            decks e stakes, temas de carta, desbloqueios de Coringas, falas, balance.ts (fórmulas de meta e preços)
+  engine/migrate.ts  troca os Coringas removidos pelo correlato ao carregar uma run salva
   ai/       IA do adversário (heurística + Monte Carlo) e IA jogadora do simulador
   ui/       React: telas, componentes, store, animações e efeitos
   audio/    sons sintetizados com WebAudio
@@ -291,6 +337,7 @@ Arquitetura e decisões de design: [DESIGN.md](DESIGN.md).
 
 ## Salvamento
 
-Run em andamento, configurações, recordes, Coringas descobertos e stakes vencidas ficam salvos na pasta
-de dados do Trucado no computador (o `localStorage` da janela do jogo). Sem armazenamento disponível o
+Run em andamento, configurações, recordes, Coringas descobertos, baralhos vencidos, conquistas e
+Coringas desbloqueados ficam salvos na pasta de dados do Trucado no computador (o `localStorage` da
+janela do jogo). Sem armazenamento disponível o
 jogo funciona, só não salva.
