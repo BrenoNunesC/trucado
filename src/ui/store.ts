@@ -249,6 +249,7 @@ export function unlockEverything(): void {
       discoveredJokers: [...p.discoveredJokers],
       tutorialDone: p.tutorialDone,
       unlockedJokers: [...(p.unlockedJokers ?? [])],
+      achievements: [...(p.achievements ?? [])],
     };
   }
   p.admin = true;
@@ -269,6 +270,15 @@ export function setAdmin(on: boolean): void {
     p.discoveredJokers = b.discoveredJokers;
     p.tutorialDone = b.tutorialDone;
     p.unlockedJokers = b.unlockedJokers;
+    p.achievements = b.achievements;
+  } else {
+    // sem cópia (o administrador já estava ligado antes dela existir): não há progresso guardado
+    // para voltar, então o progresso de desbloqueio começa do zero
+    p.stakesWon = {};
+    p.discoveredJokers = [];
+    p.tutorialDone = false;
+    p.unlockedJokers = [];
+    p.achievements = [];
   }
   delete p.adminBackup;
   p.admin = false;

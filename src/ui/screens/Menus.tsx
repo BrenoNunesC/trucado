@@ -363,8 +363,16 @@ export function SettingsScreen() {
           hint="Libera todos os baralhos, stakes e Coringas e põe o Painel do administrador no Menu (Esc) durante a run: dinheiro, qualquer Coringa ou consumível, mais mãos e vencer o Blind. Ao desligar, seu progresso volta ao que era antes de ligar."
           value={!!s.profile.admin}
           onChange={(v) => {
+            const hadBackup = !!s.profile.adminBackup;
             setAdmin(v);
-            toast(v ? 'Modo administrador ligado: tudo desbloqueado.' : 'Modo administrador desligado: seu progresso voltou ao que era antes.', 'good');
+            toast(
+              v
+                ? 'Modo administrador ligado: tudo desbloqueado.'
+                : hadBackup
+                  ? 'Modo administrador desligado: seu progresso voltou ao que era antes.'
+                  : 'Modo administrador desligado: sem cópia do progresso, os desbloqueios começaram do zero.',
+              'good',
+            );
           }}
         />
       </section>

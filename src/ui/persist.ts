@@ -90,6 +90,7 @@ export interface Profile {
     discoveredJokers: string[];
     tutorialDone: boolean;
     unlockedJokers: string[];
+    achievements: string[];
   };
   /** Coringas destravados por condições (ver data/unlocks.ts). */
   unlockedJokers?: string[];
