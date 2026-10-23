@@ -16,7 +16,7 @@ import { DECK_BY_ID } from '../data/decks';
 import type { SpeechEvent } from '../data/speech';
 import { isZap, standardDeck, type Card } from './cards';
 import { detectCategory, ties } from './handFacts';
-import { addConsumable, hasVoucher, jokerDef } from './inventory';
+import { addConsumable, hasVoucher, jokerDef, resolvedJokers } from './inventory';
 import type { BlindCtx, HandEndCtx } from './jokerApi';
 import { fork, int, shuffle } from './rng';
 import { activeJokers, scoreHand } from './scoring';
@@ -64,7 +64,7 @@ export function buildRules(run: RunState, info: BlindInfo): BlindRules {
   if (run.stake >= 5) rules.bluffs -= 1;
   if (run.stake >= 8) rules.hands -= 1;
   if (info.bossId) BOSS_BY_ID[info.bossId]?.apply(rules, run);
-  if (run.jokers.some((j) => jokerDef(j).passive?.hidesVira)) rules.hideVira = true;
+  if (resolvedJokers(run.jokers).some((r) => r.def.passive?.hidesVira)) rules.hideVira = true;
   rules.hands = Math.max(1, rules.hands);
   rules.bluffs = Math.max(0, rules.bluffs);
   return rules;
@@ -135,7 +135,7 @@ export function startBlind(run: RunState): BlindState {
     blind.rules.bluffs += 1;
   }
 
-  for (const j of activeJokers(run, blind)) jokerDef(j).blindStart?.(blindCtx(run, blind), j);
+  for (const r of resolvedJokers(activeJokers(run, blind))) r.def.blindStart?.(blindCtx(run, blind), r.self);
   dealHand(run);
   return blind;
 }
@@ -394,7 +394,7 @@ export function finishHand(run: RunState): HandSummary {
   } else if (result.winner === 'ai') {
     blind.handsLost += 1;
     if (hand.level > 0) {
-      const free = !blind.freeLossUsed && run.jokers.some((j) => jokerDef(j).passive?.firstLossFree);
+      const free = !blind.freeLossUsed && resolvedJokers(run.jokers).some((r) => r.def.passive?.firstLossFree);
       if (free) {
         blind.freeLossUsed = true;
         summary.messages.push('Zé Pilintra cobriu a aposta perdida.');
@@ -423,7 +423,7 @@ export function finishHand(run: RunState): HandSummary {
     },
     addConsumable: (kind, id) => addConsumable(run, kind, id),
   };
-  for (const j of activeJokers(run, blind)) jokerDef(j).handEnd?.(ctx, j);
+  for (const r of resolvedJokers(activeJokers(run, blind))) r.def.handEnd?.(ctx, r.self);
   const gone = run.jokers.filter((j) => j.state.destroyed);
   for (const j of gone) summary.messages.push(`${jokerDef(j).name} acabou!`);
   run.jokers = run.jokers.filter((j) => !j.state.destroyed);
@@ -474,7 +474,7 @@ export function computeCashout(run: RunState): CashoutLine[] {
   if (hasVoucher(run, 'cobrador')) lines.push({ label: 'Cobrador', amount: 2 });
   const i = interest(run);
   if (i > 0) lines.push({ label: `Juros (1 a cada $${INTEREST_STEP})`, amount: i });
-  for (const j of activeJokers(run, blind)) jokerDef(j).blindEnd?.(blindCtx(run, blind, lines), j);
+  for (const r of resolvedJokers(activeJokers(run, blind))) r.def.blindEnd?.(blindCtx(run, blind, lines), r.self);
   if (kind === 'chefe') {
     const inv = run.tags.filter((t) => t === 'investimento').length;
     if (inv > 0) lines.push({ label: 'Tag de Investimento', amount: 15 * inv });

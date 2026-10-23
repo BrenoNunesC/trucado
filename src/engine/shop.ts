@@ -28,6 +28,7 @@ import {
   jokerDef,
   randomConsumableId,
   randomJokerId,
+  resolvedJokers,
 } from './inventory';
 import { chance, next, pick, weighted } from './rng';
 import type { JokerEdition, PackOption, Rarity, RunState, ShopItem, ShopState } from './state';
@@ -100,7 +101,7 @@ export function rerollCost(run: RunState): number {
   const shop = run.shop!;
   if (shop.freeRerolls > 0) return 0;
   let discount = (hasVoucher(run, 'garcomAmigo') ? 2 : 0) + (hasVoucher(run, 'amigoDoDono') ? 2 : 0);
-  for (const j of run.jokers) discount += jokerDef(j).passive?.rerollDiscount ?? 0;
+  for (const r of resolvedJokers(run.jokers)) discount += r.def.passive?.rerollDiscount ?? 0;
   return Math.max(0, shop.rerollCost - discount);
 }
 

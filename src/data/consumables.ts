@@ -32,6 +32,8 @@ export interface ConsumableDef {
   use: (ctx: UseCtx) => void;
   /** Para Gírias: a jogada que sobe. */
   category?: CategoryId;
+  /** Peso no sorteio do tipo (padrão 1). */
+  weight?: number;
 }
 
 function suitTarot(id: string, name: string, icon: string, suit: Suit, suitName: string): ConsumableDef {
@@ -417,6 +419,7 @@ const MANDINGAS: ConsumableDef[] = [
     kind: 'mandinga',
     name: 'Pacto',
     icon: '😈',
+    weight: 0.3,
     description: 'Cria um Coringa Lendário.',
     blocked: (run) => (run.jokers.length >= run.jokerSlots ? 'Sem espaço para Coringas.' : null),
     use: (ctx) => {

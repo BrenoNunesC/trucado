@@ -16,8 +16,8 @@ import { newRun, selectBlind, skipBlind, targetFor } from '../engine/run';
 import type { CoopSeat, HandSummary, RunState } from '../engine/state';
 
 /** Cria a run local quando a campanha começa. Cada um com o próprio baralho. */
-export function createCampaignRun(view: CampView, code: string, deckId: string, you: CoopSeat): RunState {
-  const run = newRun({ seed: `${view.seed}${view.seat}`.slice(0, 16), deckId, stake: view.stake, options: view.options });
+export function createCampaignRun(view: CampView, code: string, deckId: string, you: CoopSeat, lockedJokers: string[] = []): RunState {
+  const run = newRun({ seed: `${view.seed}${view.seat}`.slice(0, 16), deckId, stake: view.stake, options: view.options, lockedJokers });
   run.coop = {
     partner: { name: view.partner.name, avatar: view.partner.avatar, personality: 'equilibrado' },
     you,

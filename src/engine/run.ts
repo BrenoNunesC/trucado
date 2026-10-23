@@ -7,7 +7,7 @@ import { DECK_BY_ID, stakeTargetFactor } from '../data/decks';
 import { OPPONENTS, type OpponentDef } from '../data/opponents';
 import { TAG_BY_ID, TAGS } from '../data/tags';
 import { startBlind } from './blind';
-import { addConsumable, addJoker, jokerDef } from './inventory';
+import { addConsumable, addJoker, resolvedJokers } from './inventory';
 import { createRng, pick } from './rng';
 import { activeJokers } from './scoring';
 import { generateShop, openPack } from './shop';
@@ -18,6 +18,8 @@ export interface NewRunParams {
   deckId: string;
   stake: number;
   options?: Partial<RunOptions>;
+  /** Coringas trancados no perfil nesta hora (ver data/unlocks.ts). */
+  lockedJokers?: string[];
 }
 
 export function newRun(p: NewRunParams): RunState {
@@ -43,6 +45,7 @@ export function newRun(p: NewRunParams): RunState {
     levels: initialLevels(),
     vouchers: [],
     tags: [],
+    lockedJokers: p.lockedJokers ?? [],
     phase: 'select',
     blind: null,
     shop: null,
@@ -209,10 +212,10 @@ export function collectCashout(run: RunState): number {
   if (isBoss) {
     run.stats.bossesDefeated += 1;
     run.tags = run.tags.filter((t) => t !== 'investimento');
-    for (const j of activeJokers(run, blind)) {
-      jokerDef(j).bossDefeated?.(
+    for (const r of resolvedJokers(activeJokers(run, blind))) {
+      r.def.bossDefeated?.(
         { run, blind, money: (n) => void (run.money += n), addConsumable: (k, id) => addConsumable(run, k, id) },
-        j,
+        r.self,
       );
     }
   }

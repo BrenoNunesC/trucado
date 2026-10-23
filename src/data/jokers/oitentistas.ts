@@ -82,17 +82,6 @@ export default defineJokers([
     retrigger: (ctx, _self, round) => (round === ctx.roundsWon[ctx.roundsWon.length - 1] ? 1 : 0),
   },
   {
-    id: 'oculosNeon',
-    name: 'Óculos Neon',
-    rarity: 'incomum',
-    icon: '🕶️',
-    color: '#ff2bd6',
-    description: () => '+10 Mult se você venceu alguma rodada com manilha.',
-    score: (ctx) => {
-      if (ctx.roundsWon.some((r) => ctx.isManilha(r.card))) ctx.mult(10);
-    },
-  },
-  {
     id: 'patins',
     name: 'Patins',
     rarity: 'incomum',
@@ -106,18 +95,6 @@ export default defineJokers([
     handEnd: (ctx, self) => {
       if (ctx.won) self.state.mult += 1;
       else if (ctx.hand.result?.winner === 'ai') self.state.mult = 0;
-    },
-  },
-  {
-    id: 'pochete',
-    name: 'Pochete',
-    rarity: 'incomum',
-    icon: '👝',
-    color: '#ff9b3d',
-    description: () => '+1 Mult para cada $3 que você tem (máx. +15).',
-    score: (ctx) => {
-      const n = Math.min(15, Math.floor(ctx.run.money / 3));
-      if (n > 0) ctx.mult(n);
     },
   },
   {
@@ -142,21 +119,6 @@ export default defineJokers([
     score: (ctx) => {
       const lost = ctx.hand.rounds.some((r) => r.outcome === 'ai');
       if (!lost && ctx.roundsWon.length >= 2) ctx.xmult(2);
-    },
-  },
-  {
-    id: 'globoEspelhado',
-    name: 'Globo Espelhado',
-    rarity: 'raro',
-    icon: '🪩',
-    color: '#e8e2c8',
-    initialState: () => ({ x: 1 }),
-    description: (s) => `Ganha ×0.25 Mult a cada canga. (Atual: ×${s.state.x ?? 1})`,
-    score: (ctx, self) => {
-      if (self.state.x > 1) ctx.xmult(self.state.x);
-    },
-    handEnd: (ctx, self) => {
-      if (ctx.ties > 0) self.state.x += 0.25 * ctx.ties;
     },
   },
   // ---------------------------------------------------------------- lendário

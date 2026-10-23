@@ -4,7 +4,7 @@ import { BET_MULT, EDITION_CHIPS, EDITION_MULT, EDITION_XMULT, GOLD_SEAL_MONEY }
 import { CATEGORY_BY_ID, categoryValues } from '../data/categories';
 import { cardChips, cardLabel, SUIT_NAME } from './cards';
 import { cardIsManilha, detectCategory, manilhasPlayed, ties } from './handFacts';
-import { addConsumable, jokerDef } from './inventory';
+import { addConsumable, jokerDef, resolvedJokers } from './inventory';
 import type { JokerDef, ScoreCtx, WonRound } from './jokerApi';
 import type { BlindState, JokerInstance, RunState, ScoreResult, ScoreStep } from './state';
 import { BET_NAMES, roundsWonBy, type TrucoHand } from './truco';
@@ -22,22 +22,14 @@ export function activeJokers(run: RunState, blind: BlindState | null): JokerInst
   return run.jokers.filter((j) => j.uid !== blind?.rules.disabledJoker);
 }
 
-/** Atores de pontuação, resolvendo o Boto (copia o vizinho da direita). */
+/** Atores de pontuação, com o Boto resolvido (copia o vizinho da direita). */
 function actors(run: RunState, blind: BlindState): Actor[] {
-  const list = activeJokers(run, blind);
-  const out: Actor[] = [];
-  list.forEach((j, i) => {
-    const def = jokerDef(j);
-    if (def.passive?.copyRight) {
-      const right = list[i + 1];
-      if (right && !jokerDef(right).passive?.copyRight) {
-        out.push({ self: right, def: jokerDef(right), ref: j.uid, name: def.name });
-      }
-      return;
-    }
-    out.push({ self: j, def, ref: j.uid, name: def.name });
-  });
-  return out;
+  return resolvedJokers(activeJokers(run, blind)).map((r) => ({
+    self: r.self,
+    def: r.def,
+    ref: r.owner.uid,
+    name: jokerDef(r.owner).name,
+  }));
 }
 
 const fmt = (n: number) => (Number.isInteger(n) ? `${n}` : n.toFixed(2).replace(/0$/, ''));

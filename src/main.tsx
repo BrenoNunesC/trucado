@@ -9,6 +9,7 @@ import '@fontsource/nunito/latin-400.css';
 import '@fontsource/nunito/latin-600.css';
 import '@fontsource/nunito/latin-700.css';
 import '@fontsource/nunito/latin-800.css';
+import '@fontsource/bowlby-one/latin-400.css';
 import './ui/styles.css';
 
 createRoot(document.getElementById('root')!).render(

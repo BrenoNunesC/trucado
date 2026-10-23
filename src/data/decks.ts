@@ -231,19 +231,21 @@ export interface StakeDef {
 
 /** Cumulativas: a stake N inclui as regras de todas abaixo. */
 export const STAKES: StakeDef[] = [
-  { level: 1, name: 'Ficha Branca', color: '#f0f0f0', description: 'Regras básicas.' },
-  { level: 2, name: 'Ficha Vermelha', color: '#e53935', description: 'O Blind Pequeno não dá recompensa em dinheiro.' },
-  { level: 3, name: 'Ficha Verde', color: '#43a047', description: 'As metas crescem mais rápido (+15%).' },
-  { level: 4, name: 'Ficha Preta', color: '#212121', description: 'Adversários mais agressivos.' },
-  { level: 5, name: 'Ficha Azul', color: '#1e88e5', description: '−1 blefe por Blind.' },
-  { level: 6, name: 'Ficha Roxa', color: '#8e24aa', description: 'Metas ainda maiores (+15%).' },
-  { level: 7, name: 'Ficha Laranja', color: '#fb8c00', description: 'Tudo na loja custa $1 a mais.' },
-  { level: 8, name: 'Ficha Dourada', color: '#fdd835', description: '−1 mão por Blind.' },
+  { level: 1, name: 'Ficha Branca', color: '#f0f0f0', description: 'Regras básicas. Metas +40%.' },
+  { level: 2, name: 'Ficha Vermelha', color: '#e53935', description: 'Metas +15%. O Blind Pequeno não dá recompensa em dinheiro.' },
+  { level: 3, name: 'Ficha Verde', color: '#43a047', description: 'Metas +15%.' },
+  { level: 4, name: 'Ficha Preta', color: '#212121', description: 'Metas +15%. Adversários mais agressivos.' },
+  { level: 5, name: 'Ficha Azul', color: '#1e88e5', description: 'Metas +15%. −1 blefe por Blind.' },
+  { level: 6, name: 'Ficha Roxa', color: '#8e24aa', description: 'Metas +15%.' },
+  { level: 7, name: 'Ficha Laranja', color: '#fb8c00', description: 'Metas +15%. Tudo na loja custa $1 a mais.' },
+  { level: 8, name: 'Ficha Dourada', color: '#fdd835', description: 'Metas +15%. −1 mão por Blind.' },
 ];
 
+/** Meta da Ficha Branca (run padrão), sobre a base de balance.ts. */
+const BRANCA_TARGET_FACTOR = 1.4;
+
+/** Fichas acima da Branca somam +15% na meta, cumulativo. */
 export function stakeTargetFactor(stake: number): number {
-  let f = 1;
-  if (stake >= 3) f *= 1.15;
-  if (stake >= 6) f *= 1.15;
-  return f;
+  if (stake <= 1) return BRANCA_TARGET_FACTOR;
+  return Math.pow(1.15, stake - 1);
 }

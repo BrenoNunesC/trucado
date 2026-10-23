@@ -204,8 +204,8 @@ describe('Coringas', () => {
     expect(run.money).toBe(before + 2);
   });
 
-  it('Bolinho de Chuva perde fichas e some', () => {
-    const run = setup(['bolinho']);
+  it('Porção de Torresmo perde fichas e some', () => {
+    const run = setup(['torresmo']);
     run.jokers[0].state.chips = 5;
     const hand = put(run, ...WIN_FECHOU);
     play(hand, [[0, 0], [0, 0]]);

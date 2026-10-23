@@ -14,6 +14,7 @@ import type { HandSummary, RunState } from '../engine/state';
 import { DECKS, STAKES } from '../data/decks';
 import { JOKERS } from '../data/jokers';
 import { newAchievements } from '../data/achievements';
+import { newJokerUnlocks } from '../data/unlocks';
 import { configureFx } from './fx';
 import { loadProfile, loadRun, loadSettings, saveOnlineRun, saveProfile, saveRun, saveSettings, type Profile, type Settings } from './persist';
 
@@ -195,6 +196,17 @@ function checkAchievements(): boolean {
   return true;
 }
 
+/** Destrava os Coringas trancados cujas condições acabaram de ser cumpridas. */
+function checkJokerUnlocks(): boolean {
+  const st = state.run?.stats;
+  if (!st) return false;
+  const fresh = newJokerUnlocks(state.profile, st);
+  if (!fresh.length) return false;
+  state.profile.unlockedJokers = [...(state.profile.unlockedJokers ?? []), ...fresh];
+  for (const id of fresh) toast(`🃏 Coringa desbloqueado: ${JOKERS.find((j) => j.id === id)?.name ?? id}`, 'good');
+  return true;
+}
+
 export function persistRun(): void {
   const run = state.run;
   if (!run) return;
@@ -207,6 +219,7 @@ export function persistRun(): void {
     }
   }
   if (checkAchievements()) changed = true;
+  if (checkJokerUnlocks()) changed = true;
   if (changed) saveProfile(state.profile);
   // a run da campanha online não pode tomar o lugar da sua run solo salva
   if (run.coop?.online) saveOnlineRun(run.phase === 'over' ? null : run);
@@ -229,6 +242,15 @@ export function setSettings(patch: Partial<Settings>): void {
  */
 export function unlockEverything(): void {
   const p = state.profile;
+  // guarda o progresso real antes de liberar tudo; ao desligar, volta para ele
+  if (!p.admin) {
+    p.adminBackup = {
+      stakesWon: { ...p.stakesWon },
+      discoveredJokers: [...p.discoveredJokers],
+      tutorialDone: p.tutorialDone,
+      unlockedJokers: [...(p.unlockedJokers ?? [])],
+    };
+  }
   p.admin = true;
   p.tutorialDone = true;
   for (const d of DECKS) p.stakesWon[d.id] = Math.max(p.stakesWon[d.id] ?? 0, STAKES.length);
@@ -239,8 +261,17 @@ export function unlockEverything(): void {
 
 export function setAdmin(on: boolean): void {
   if (on) return unlockEverything();
-  // desligar só tira o painel; o que já foi desbloqueado continua
-  state.profile.admin = false;
+  // desligar volta ao progresso que o jogador tinha antes de ligar
+  const p = state.profile;
+  const b = p.adminBackup;
+  if (b) {
+    p.stakesWon = b.stakesWon;
+    p.discoveredJokers = b.discoveredJokers;
+    p.tutorialDone = b.tutorialDone;
+    p.unlockedJokers = b.unlockedJokers;
+  }
+  delete p.adminBackup;
+  p.admin = false;
   saveProfile(state.profile);
   emit();
 }
@@ -248,6 +279,7 @@ export function setAdmin(on: boolean): void {
 export function updateProfile(fn: (p: Profile) => void): void {
   fn(state.profile);
   checkAchievements();
+  checkJokerUnlocks();
   saveProfile(state.profile);
   emit();
 }

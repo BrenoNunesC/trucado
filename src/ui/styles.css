@@ -28,7 +28,7 @@
   /* títulos e números grandes: Yanone Kaffeesatz, com cara de letreiro de boteco antigo;
      todo o resto: Nunito, arredondada e fácil de ler */
   --font-display: 'Yanone Kaffeesatz', 'Arial Narrow', system-ui, sans-serif;
-  --font-title: 'Yanone Kaffeesatz', 'Arial Narrow', system-ui, sans-serif;
+  --font-title: 'Bowlby One', 'Yanone Kaffeesatz', 'Arial Narrow', system-ui, sans-serif;
   --font-label: 'Nunito', system-ui, sans-serif;
   --font-body: 'Nunito', system-ui, sans-serif;
   --font-mono: 'Nunito', system-ui, sans-serif;
@@ -1946,13 +1946,18 @@ h3.rarity-raro,
   font-size: 0.75rem;
   color: var(--muted);
 }
-.deck-suit.suit-copas,
-.deck-suit.suit-ouros {
+/* um tom por naipe: Espadas e Paus precisavam se diferenciar */
+.deck-suit.suit-copas {
   color: #ff6b73;
 }
-.deck-suit.suit-espadas,
-.deck-suit.suit-paus {
+.deck-suit.suit-ouros {
+  color: #ffa94d;
+}
+.deck-suit.suit-espadas {
   color: #d9d9e8;
+}
+.deck-suit.suit-paus {
+  color: #7bd389;
 }
 .deck-cards {
   display: flex;
@@ -2447,14 +2452,14 @@ h3.rarity-raro,
 
 .screen-title {
   font-family: var(--font-title);
-  font-weight: 700;
+  font-weight: 400;
   color: var(--b-text);
   text-shadow: 0 3px 0 rgba(0, 0, 0, 0.45);
   letter-spacing: 0.02em;
 }
 .logo h1 {
   font-family: var(--font-title);
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.04em;
   color: #fff;
   -webkit-text-stroke: 0;
@@ -2597,6 +2602,7 @@ h3.rarity-raro,
   font-size: 1.7rem !important;
   border-radius: 8px !important;
   color: #fff !important;
+  white-space: nowrap;
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
 }
 .chips-box {
@@ -4723,4 +4729,54 @@ h3.rarity-raro,
 }
 .link-btn:hover {
   color: var(--amber);
+}
+
+/* ------------------------------------------------------------ inventário numa linha só
+   Coringas e consumíveis encolhem para caber na largura da mesa, em vez de quebrar em
+   várias linhas e empurrar a mesa para baixo (a página não precisa mais de rolagem). */
+.inventory {
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+.joker-row {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.cons-row {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 240px;
+}
+.joker-row .slots,
+.cons-row .slots {
+  flex-wrap: nowrap;
+  min-height: 0;
+  gap: 6px;
+}
+.joker-row .slot,
+.cons-row .slot {
+  flex: 0 1 70px;
+  min-width: 0;
+}
+.joker-row .slot .joker,
+.joker-row .slot.empty {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 70 / 92;
+}
+.cons-row .slot .consumable,
+.cons-row .slot.empty {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+@media (max-width: 1100px) {
+  .inventory {
+    flex-wrap: wrap;
+  }
+  .joker-row,
+  .cons-row {
+    flex: 1 1 100%;
+    max-width: none;
+  }
 }

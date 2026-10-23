@@ -18,6 +18,7 @@ import { Tip } from '../components/Tip';
 import { saveRun } from '../persist';
 import { goSettings, setAdmin, setSettings, toast, update, useApp, type Screen } from '../store';
 import { fmtNum } from '../text';
+import { JOKER_UNLOCKS, isJokerLocked, lockedJokerIds } from '../../data/unlocks';
 
 const go = (screen: Screen) =>
   update((s) => {
@@ -108,6 +109,7 @@ export function NewRunScreen() {
       deckId,
       stake: Math.min(stake, maxStake),
       options: { maoDeOnze: s.settings.campaignOnze, maoDeFerro: s.settings.campaignFerro },
+      lockedJokers: lockedJokerIds(p),
     });
     if (coop) makeCoop(run, partner, s.settings.onlineAvatar);
     saveRun(run);
@@ -358,11 +360,11 @@ export function SettingsScreen() {
         <h3>Administrador</h3>
         <Toggle
           label="Modo administrador"
-          hint="Libera todos os baralhos, stakes e Coringas e põe o Painel do administrador no Menu (Esc) durante a run: dinheiro, qualquer Coringa ou consumível, mais mãos e vencer o Blind."
+          hint="Libera todos os baralhos, stakes e Coringas e põe o Painel do administrador no Menu (Esc) durante a run: dinheiro, qualquer Coringa ou consumível, mais mãos e vencer o Blind. Ao desligar, seu progresso volta ao que era antes de ligar."
           value={!!s.profile.admin}
           onChange={(v) => {
             setAdmin(v);
-            toast(v ? 'Modo administrador ligado: tudo desbloqueado.' : 'Modo administrador desligado (o que foi liberado continua).', 'good');
+            toast(v ? 'Modo administrador ligado: tudo desbloqueado.' : 'Modo administrador desligado: seu progresso voltou ao que era antes.', 'good');
           }}
         />
       </section>
@@ -388,7 +390,13 @@ export function Collection() {
           <h3 className={`rarity-${r}`}>{RARITY_NAME[r]}</h3>
           <div className="collection-grid">
             {JOKERS.filter((j) => j.rarity === r).map((j) =>
-              found.has(j.id) ? (
+              isJokerLocked(j.id, s.profile) ? (
+                <Tip key={j.id} content={`Trancado. Desbloqueio: ${JOKER_UNLOCKS[j.id].text}`}>
+                  <div className="joker unknown locked" aria-label="Coringa trancado">
+                    <span className="joker-icon">🔒</span>
+                  </div>
+                </Tip>
+              ) : found.has(j.id) ? (
                 <Tip key={j.id} content={<JokerTip id={j.id} />}>
                   <JokerFace id={j.id} />
                 </Tip>

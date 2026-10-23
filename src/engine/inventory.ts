@@ -20,6 +20,34 @@ export function jokerDef(j: JokerInstance | string): JokerDef {
   return d;
 }
 
+export interface ResolvedJoker {
+  /** Coringa que aparece na mesa (o Boto, quando copia). */
+  owner: JokerInstance;
+  /** Instância cujo estado é lido: a da direita, quando o Boto copia. */
+  self: JokerInstance;
+  /** Definição que executa os efeitos. */
+  def: JokerDef;
+}
+
+/**
+ * Resolve o Boto: ele vira uma cópia total do Coringa à direita (todos os efeitos e passivos),
+ * usando o estado dessa instância. Não copia outro Boto, para não ficar em loop.
+ */
+export function resolvedJokers(list: JokerInstance[]): ResolvedJoker[] {
+  const out: ResolvedJoker[] = [];
+  list.forEach((owner, i) => {
+    const def = jokerDef(owner);
+    if (!def.passive?.copyRight) {
+      out.push({ owner, self: owner, def });
+      return;
+    }
+    const right = list[i + 1];
+    if (!right || jokerDef(right).passive?.copyRight) return;
+    out.push({ owner, self: right, def: jokerDef(right) });
+  });
+  return out;
+}
+
 export function jokerBaseCost(def: JokerDef): number {
   return def.cost ?? JOKER_PRICE[def.rarity];
 }
@@ -41,8 +69,12 @@ export function randomJokerId(run: RunState, rarity?: Rarity, exclude: string[] 
   const owned = new Set([...run.jokers.map((j) => j.id), ...exclude]);
   const r: Rarity =
     rarity ?? weighted(run.rng, ['comum', 'incomum', 'raro'] as Rarity[], (x) => RARITY_WEIGHTS[x]);
-  let pool = jokersOfRarity(r).filter((j) => !owned.has(j.id));
-  if (pool.length === 0) pool = jokersOfRarity(r);
+  // Coringas trancados da run (condições ainda não cumpridas) não entram em lugar nenhum
+  const locked = new Set(run.lockedJokers ?? []);
+  const open = (j: JokerDef) => !locked.has(j.id);
+  let pool = jokersOfRarity(r).filter((j) => !owned.has(j.id) && open(j));
+  if (pool.length === 0) pool = jokersOfRarity(r).filter(open);
+  if (pool.length === 0) pool = JOKERS.filter(open);
   if (pool.length === 0) pool = JOKERS;
   return pick(run.rng, pool).id;
 }
@@ -83,7 +115,7 @@ export function moveJoker(run: RunState, uid: string, toIndex: number): void {
 }
 
 export function randomConsumableId(run: RunState, kind: ConsumableKind): string {
-  return pick(run.rng, consumablesOfKind(kind)).id;
+  return weighted(run.rng, consumablesOfKind(kind), (c) => c.weight ?? 1).id;
 }
 
 export function addConsumable(run: RunState, kind: ConsumableKind, id?: string): boolean {

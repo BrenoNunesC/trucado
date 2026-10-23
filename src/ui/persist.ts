@@ -1,5 +1,6 @@
 // localStorage com try/catch: o jogo funciona mesmo sem armazenamento.
 
+import { migrateRemovedJokers } from '../engine/migrate';
 import type { RunState } from '../engine/state';
 
 export type TableTheme = 'itaipava' | 'sinuca' | 'quintal';
@@ -83,6 +84,15 @@ export interface Profile {
   freeLosses: number;
   /** Modo administrador: tudo desbloqueado e o painel do administrador no Menu. */
   admin?: boolean;
+  /** Progresso guardado ao ligar o administrador; volta ao desligar. */
+  adminBackup?: {
+    stakesWon: Record<string, number>;
+    discoveredJokers: string[];
+    tutorialDone: boolean;
+    unlockedJokers: string[];
+  };
+  /** Coringas destravados por condições (ver data/unlocks.ts). */
+  unlockedJokers?: string[];
   /** Conquistas já feitas (ids). */
   achievements?: string[];
   duplasWins?: number;
@@ -138,7 +148,7 @@ export const saveProfile = (p: Profile) => write(KEY_PROFILE, p);
 
 export function loadRun(): RunState | null {
   const r = read<RunState>(KEY_RUN);
-  return r && r.version === 1 && r.phase !== 'over' ? r : null;
+  return r && r.version === 1 && r.phase !== 'over' ? migrateRemovedJokers(r) : null;
 }
 export const saveRun = (r: RunState | null) => write(KEY_RUN, r);
 
@@ -149,6 +159,6 @@ export const saveRun = (r: RunState | null) => write(KEY_RUN, r);
 const KEY_ONLINE_RUN = 'trucado-online-run';
 export function loadOnlineRun(code: string): RunState | null {
   const r = read<RunState>(KEY_ONLINE_RUN);
-  return r && r.coop?.online?.code === code ? r : null;
+  return r && r.coop?.online?.code === code ? migrateRemovedJokers(r) : null;
 }
 export const saveOnlineRun = (r: RunState | null) => write(KEY_ONLINE_RUN, r);

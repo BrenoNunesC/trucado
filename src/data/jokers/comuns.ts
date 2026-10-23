@@ -85,29 +85,6 @@ export default defineJokers([
     },
   },
   {
-    id: 'caderneta',
-    name: 'Caderneta do Fiado',
-    rarity: 'comum',
-    icon: '📒',
-    color: '#e8d8a8',
-    description: () => 'Ganha $3 ao vencer cada Blind.',
-    blindEnd: (ctx) => ctx.money(3, 'Caderneta'),
-  },
-  {
-    id: 'bolinho',
-    name: 'Bolinho de Chuva',
-    rarity: 'comum',
-    icon: '🍩',
-    color: '#e0a060',
-    initialState: () => ({ chips: 50 }),
-    description: (s) => `+${s.state.chips ?? 50} Fichas. Perde 5 a cada mão jogada; some ao acabar.`,
-    score: (ctx, self) => ctx.chips(self.state.chips),
-    handEnd: (_ctx, self) => {
-      self.state.chips -= 5;
-      if (self.state.chips <= 0) self.state.destroyed = 1;
-    },
-  },
-  {
     id: 'garrafa',
     name: 'Garrafa de Pinga',
     rarity: 'comum',

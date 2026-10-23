@@ -52,7 +52,7 @@ export default defineJokers([
     rarity: 'raro',
     icon: '🐬',
     color: '#ff9ecf',
-    description: () => 'Copia o efeito de pontuação do Coringa à sua direita.',
+    description: () => 'Copia por completo o Coringa à sua direita (pontuação, Blinds e passivos).',
     passive: { copyRight: true },
   },
   {

@@ -7,6 +7,7 @@ import type { CampView } from '../engine/campaign';
 import type { HandSummary } from '../engine/state';
 import { applyCampaign, bluffOnline, cardsMessage, createCampaignRun, scoreOnline, type CampEffects } from '../net/campaignRun';
 import { JOKER_BY_ID } from '../data/jokers';
+import { lockedJokerIds } from '../data/unlocks';
 import { newUid } from '../engine/inventory';
 import { onlineGift, onlineSend, setCampaignHandler, setGiftHandler } from '../net/client';
 import { loadOnlineRun } from './persist';
@@ -19,7 +20,7 @@ function handle(code: string, view: CampView): void {
   let run = s.run?.coop?.online?.code === code ? s.run : loadOnlineRun(code);
   if (!run) {
     const you = { name: s.settings.onlineName.trim() || 'Você', avatar: s.settings.onlineAvatar, personality: 'equilibrado' as const };
-    run = createCampaignRun(view, code, s.online?.campDeck ?? 'classico', you);
+    run = createCampaignRun(view, code, s.online?.campDeck ?? 'classico', you, lockedJokerIds(s.profile));
   }
   if (s.run !== run) {
     const r = run;

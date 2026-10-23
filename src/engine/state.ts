@@ -264,6 +264,8 @@ export interface RunState {
   endless: boolean;
   /** Ids de Coringas vistos nesta run (para a coleção). */
   seenJokers: string[];
+  /** Coringas trancados quando a run começou (não saem nas lojas nem nos pacotes). */
+  lockedJokers?: string[];
   uidCounter: number;
   bossesSeen: string[];
   /** Fim de run já contabilizado no perfil. */
