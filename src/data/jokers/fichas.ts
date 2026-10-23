@@ -8,7 +8,7 @@ export default defineJokers([
     id: 'figurao',
     name: 'Figurão',
     rarity: 'incomum',
-    icon: '🎩',
+    icon: '🎭',
     color: '#c9a227',
     description: () => '+30 Fichas para cada rodada vencida com figura (Q, J ou K).',
     scoreCard: (ctx, _self, round) => {

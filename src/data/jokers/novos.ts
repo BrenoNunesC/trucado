@@ -150,7 +150,7 @@ export default defineJokers([
     id: 'reiDoPeDeMesa',
     name: 'Rei do Pé de Mesa',
     rarity: 'incomum',
-    icon: '🪑',
+    icon: '🍽️',
     color: '#a8641e',
     description: () => '×2 Mult quando a Jogada é Pé de Mesa.',
     score: (ctx) => {

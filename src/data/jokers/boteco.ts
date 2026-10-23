@@ -163,7 +163,7 @@ export default defineJokers([
     id: 'saideira',
     name: 'A Saideira',
     rarity: 'raro',
-    icon: '🍻',
+    icon: '🥂',
     color: '#ff8c3a',
     description: () => '×3 Mult na última mão do Blind.',
     score: (ctx) => {

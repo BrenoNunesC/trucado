@@ -21,7 +21,7 @@ export default defineJokers([
     id: 'pinguco',
     name: 'Pinguço',
     rarity: 'comum',
-    icon: '🍺',
+    icon: '🥴',
     color: '#f2b233',
     description: () => '+4 Mult.',
     score: (ctx) => ctx.mult(4),
