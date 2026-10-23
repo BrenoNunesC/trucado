@@ -66,7 +66,9 @@ export function hasVoucher(run: RunState, id: string): boolean {
 
 /** Sorteia um Coringa evitando repetir os que o jogador já tem. */
 export function randomJokerId(run: RunState, rarity?: Rarity, exclude: string[] = []): string {
-  const owned = new Set([...run.jokers.map((j) => j.id), ...exclude]);
+  // com o Showman na mesa, repetidos entram no sorteio (inclusive os já na loja ou no pacote)
+  const showman = run.jokers.some((j) => jokerDef(j).passive?.allowDuplicates);
+  const owned = new Set(showman ? [] : [...run.jokers.map((j) => j.id), ...exclude]);
   const r: Rarity =
     rarity ?? weighted(run.rng, ['comum', 'incomum', 'raro'] as Rarity[], (x) => RARITY_WEIGHTS[x]);
   // Coringas trancados da run (condições ainda não cumpridas) não entram em lugar nenhum

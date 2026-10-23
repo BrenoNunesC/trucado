@@ -9,6 +9,15 @@ const FIGURA = ['Q', 'J', 'K'];
 
 export default defineJokers([
   {
+    id: 'showman',
+    name: 'Showman',
+    rarity: 'incomum',
+    icon: '🎪',
+    color: '#ff6fb1',
+    description: () => 'Coringas repetidos podem aparecer na loja e nos pacotes.',
+    passive: { allowDuplicates: true },
+  },
+  {
     id: 'tioMichel',
     name: 'Tio Michel',
     rarity: 'comum',

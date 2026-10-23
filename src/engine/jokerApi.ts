@@ -92,6 +92,8 @@ export interface JokerDef {
     firstLossFree?: boolean;
     /** Copia o efeito de pontuação do Coringa à direita (Boto). */
     copyRight?: boolean;
+    /** Coringas repetidos podem aparecer na loja e nos pacotes (Showman). */
+    allowDuplicates?: boolean;
   };
 }
 
