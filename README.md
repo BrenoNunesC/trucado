@@ -1,343 +1,72 @@
-# Trucado
+<p align="center">
+  <img src="electron/icon.png" alt="Trucado" width="120" />
+</p>
 
-Roguelike de deckbuilding no estilo **Balatro**, construído sobre as regras do **Truco Paulista**.
-Você enfrenta adversários ("Blinds") cada vez mais difíceis, precisa bater uma meta de pontos
-com poucas mãos, ganha dinheiro, compra Coringas na loja e tenta chegar ao fim do Ante 8.
+<h1 align="center">Trucado</h1>
 
-Jogo de computador para Windows: abre na própria janela, funciona offline e não precisa de
-navegador nem de internet. Interface em português do Brasil.
+<p align="center">
+  Um roguelike de deckbuilding no estilo <b>Balatro</b>, construído sobre as regras do <b>Truco Paulista</b>.
+</p>
 
-## Instalar e jogar
+<p align="center">
+  <a href="https://github.com/BrenoNunesC/trucado/releases/latest"><img alt="Versão" src="https://img.shields.io/github/v/release/BrenoNunesC/trucado?label=vers%C3%A3o&color=c0392b" /></a>
+  <a href="https://github.com/BrenoNunesC/trucado/releases/latest"><img alt="Plataforma" src="https://img.shields.io/badge/Windows-instalador%20ou%20port%C3%A1til-1e88e5" /></a>
+</p>
 
-O `npm run dist` (veja Desenvolvimento) gera dois executáveis em `release/`:
+<p align="center">
+  <a href="https://github.com/BrenoNunesC/trucado/releases/latest"><b>⬇ Baixar a versão mais recente</b></a>
+</p>
 
-| Arquivo | Para quê |
-| --- | --- |
-| `Trucado-Instalador-0.3.0.exe` | instala no computador, com atalho na área de trabalho e no menu Iniciar |
-| `Trucado-0.3.0-portatil.exe` | roda direto, sem instalar (dá para levar num pendrive) |
+---
 
-O Windows pode mostrar o aviso "O Windows protegeu o computador" porque o executável não tem
-assinatura digital: clique em **Mais informações → Executar assim mesmo**.
+## O que é
 
-`F11` alterna a tela cheia. O progresso (run em andamento, recordes, coleção, conquistas) fica
-salvo no computador, na pasta de dados do Trucado.
+Você enfrenta adversários (os **Blinds**) cada vez mais difíceis, precisa bater uma meta de pontos
+com poucas mãos, ganha dinheiro, compra **Coringas** na loja e tenta chegar ao fim do **Ante 8**.
+Cada mão é uma mão de truco de verdade contra a IA, e a pontuação segue a lógica do Balatro:
+**Fichas × Mult**.
 
-O jogo instalado se atualiza sozinho: ao abrir, procura uma versão nova no GitHub Releases, baixa
-em segundo plano e pergunta se pode reiniciar. A versão portátil não se atualiza.
-
-### Música
-
-O jogo não traz música: a trilha é a sua. Coloque arquivos de áudio (MP3, OGG, M4A, FLAC…) na
-pasta **MúsicasTrucado** (Configurações → Música → *Abrir pasta das músicas*) e eles tocam em
-ordem aleatória durante o jogo. Nomeie como `Artista - Música.mp3` para o tocador (canto de baixo
-à esquerda) mostrar artista e música. No navegador, o tocador pede para escolher os arquivos.
-
-### Cenários
-
-A mesa muda sozinha: mesa de bar de plástico nos Blinds comuns, mesa de sinuca nos chefes e o
-churrasco no quintal no Ante 8. Dá para fixar um cenário em Configurações → Vídeo.
-
-## Desenvolvimento
-
-Precisa de Node.js 20+.
-
-```bash
-npm install
-npm run app        # compila e abre o jogo numa janela
-npm run dist       # gera o instalador e a versão portátil em release/
-```
-
-### Publicar uma versão
-
-1. Suba a versão em `package.json` (ex.: `0.3.0`), faça o commit e o push.
-2. No GitHub: **Actions → Publicar versão → Run workflow**. Ele gera o instalador no Windows e
-   cria um *rascunho* de release com o instalador, a versão portátil, o `latest.yml` e o
-   `.blockmap` (é o que a atualização automática lê).
-3. Abra o rascunho em **Releases**, escreva as novidades e publique. Quem tem o jogo instalado
-   recebe a atualização na próxima vez que abrir.
-
-Pelo seu computador também dá: `GH_TOKEN=<token com acesso ao repositório> npm run release`.
-
-### Versão de navegador (itch.io / GitHub Pages)
-
-O build em `dist/` roda em qualquer hospedagem de site estático (os caminhos são relativos).
-
-- **itch.io:** `npm run dist:web` gera `release/Trucado-web.zip`. No itch.io, crie um projeto
-  do tipo *HTML*, envie o zip e marque *This file will be played in the browser*.
-- **GitHub Pages:** em Settings → Pages, escolha *Source: GitHub Actions*; depois
-  **Actions → Publicar no Pages → Run workflow**.
-
-No navegador o progresso fica no armazenamento do site, a música vem de arquivos escolhidos na
-hora e não há atualização automática (a página já é sempre a última publicada). Para jogar
-online pelo navegador, o servidor precisa estar em `wss://` (sites `https` não abrem `ws://`).
-
-> **Antes de distribuir:** a mesa e a garrafa usam nomes de marcas registradas (em `BRAND`, no
-> começo de `src/ui/components/TableDecor.tsx`). Troque por nomes inventados se for publicar.
-
-Outros comandos:
-
-| Comando | O que faz |
-| --- | --- |
-| `npm run dev` | servidor de desenvolvimento com recarga automática (abre em http://localhost:5173) |
-| `npm run build` | typecheck + build do jogo em `dist/` (é o que a janela carrega) |
-| `npm test` | testes unitários (Vitest) |
-| `npm run typecheck` | checagem de tipos |
-| `npm run lint` | ESLint |
-| `npm run simulate` | simula 1000 runs com uma IA jogadora e mostra a taxa de vitória por Ante |
-| `npm run server` | servidor online local (porta 8787), para testar o modo online |
-| `npm run server:build` / `server:start` | empacota o servidor em `server-dist/` e o roda (é o que a hospedagem usa) |
-| `npm run release` | gera o instalador e publica um rascunho de release no GitHub (precisa de `GH_TOKEN`) |
-| `npm run dist:web` | versão de navegador zipada em `release/Trucado-web.zip` (para o itch.io) |
-| `npm run retratos` | gera os retratos realistas pela API de imagem (veja `scripts/retratos/`) |
-
-`npm run simulate -- --runs 300 --deck batida --stake 3` muda quantidade, deck e stake (ids em `src/data/decks.ts`).
+- 🃏 **Coringas** com efeitos próprios, alguns trancados até você cumprir uma condição.
+- 🎴 **15 baralhos** inspirados no Balatro, adaptados ao Truco (Da Canga, Do Pagode, Batida, Maluco e outros).
+- 🎨 **Temas visuais** das cartas: Clássico, Festa Junina, Carnaval e Noite de Bar.
+- 🔥 **Chefes** que mudam as regras da mesa.
+- 🌐 **Modo online**: 1 contra 1, duplas de 2 contra 2 e campanha em dupla, com chat e ranking.
+- 🎲 **Seeds**: a mesma seed gera a mesma run.
 
 ## Como jogar
 
-1. **Nova run**: escolha um baralho (veja [Baralhos](#baralhos)), uma stake (dificuldade) e uma seed
-   (ou sorteie). A mesma seed gera a mesma run.
-2. Cada **Ante** tem três Blinds: Pequeno, Grande e Chefe. O Pequeno e o Grande podem ser
-   **pulados** em troca de uma **Tag** (recompensa). O Chefe sempre muda alguma regra.
-3. Num Blind você tem **4 mãos** e **3 blefes** (4 com o Baralho da Canga) para fazer a meta de pontos. Cada mão é uma mão de
-   truco normal contra a IA.
-4. **Blefe**: antes de jogar sua primeira carta da mão, selecione até 2 cartas e troque por novas.
-5. Vencer a mão pontua **Fichas × Mult**. Perder não pontua — e, se havia aposta aceita, custa
-   dinheiro. Bateu a meta, ganha dinheiro (prêmio + mãos não usadas + juros) e vai para a **Loja**.
-6. Na loja: compre Coringas, consumíveis, cartas, pacotes e vouchers; venda Coringas; destrua
-   cartas para afinar o baralho; role a loja.
-7. Vença o Chefe do Ante 8 para ganhar. Depois dá para seguir no **modo infinito**.
+1. Escolha um baralho, uma stake (dificuldade) e comece a run.
+2. Cada **Ante** tem três Blinds: Pequeno, Grande e Chefe. O Pequeno e o Grande podem ser pulados em troca de uma **Tag**.
+3. Num Blind, você tem 4 mãos e 3 blefes para bater a meta. Vencer a mão pontua; perder não pontua.
+4. Bateu a meta, vai para a **Loja**: compre Coringas, consumíveis, cartas e pacotes, e venda o que não precisa.
+5. Vença o Chefe do Ante 8 para ganhar, e depois siga no modo infinito, se quiser.
 
-Há também o **Modo livre** (truco clássico até 12, com Mão de Onze e Mão de Ferro) e um
-**Tutorial** de uma mão.
+Também há o **Modo livre** (truco clássico até 12, com Mão de Onze e Mão de Ferro) e um **Tutorial** de uma mão.
 
-### Baralhos
+## Instalar (Windows)
 
-Cada run começa com um baralho. Os 15 baralhos são inspirados no Balatro e adaptados ao Truco. Você
-desbloqueia cada um vencendo uma run com o baralho anterior da lista (o Baralho da Canga já vem
-liberado).
+Baixe a versão mais recente em [Releases](https://github.com/BrenoNunesC/trucado/releases/latest):
 
-| Baralho | Efeito |
+| Arquivo | Para quê |
 | --- | --- |
-| **Da Canga** | +1 blefe em todo Blind (padrão) |
-| **Do Pagode** | +1 mão em todo Blind |
-| **Da Féria** | Começa com $10 a mais |
-| **Da Gorjeta** | No fim do Blind: $2 por mão não usada e $1 por blefe que sobrou. Sem juros |
-| **Do Bicheiro** | +1 slot de Coringa, mas −1 mão em todo Blind |
-| **Da Cartomante** | Começa com 2 Tarôs de Boteco e o vale Vitrine |
-| **Da Neblina** | Começa com o vale Mesa Maior, mas −1 slot de consumível |
-| **Assombrado** | Mandingas podem aparecer na loja; começa com 1 Mandinga |
-| **Sem Figuras** | Sem Q, J e K; as 40 cartas são completadas com números repetidos |
-| **Xadrez** | Só Espadas e Copas, com cada carta em dobro |
-| **Do Horóscopo** | Começa com os vales Liquidação, Vitrine e Prateleira de Pacotes |
-| **Pintado** | +1 slot de consumível, mas −1 slot de Coringa |
-| **3D** | Depois de cada Chefe vencido, ganha a Tag do Dobro |
-| **Batida** | Ao pontuar, Fichas e Mult viram a média dos dois. Metas dobradas |
-| **Maluco** | Valores e naipes de todas as cartas são sorteados ao acaso |
+| `Trucado-Instalador-x.y.z.exe` | instala no computador, com atalho na área de trabalho e no menu Iniciar. Atualiza sozinho |
+| `Trucado-x.y.z-portatil.exe` | roda direto, sem instalar (dá para levar num pendrive). Não atualiza sozinho |
 
-### Temas visuais
+O Windows pode mostrar o aviso "O Windows protegeu o computador", porque o executável não tem assinatura
+digital: clique em **Mais informações → Executar assim mesmo**.
 
-Em **Configurações → Vídeo e acessibilidade → Tema das cartas** dá para trocar o verso e a face
-das cartas: Clássico, Festa Junina, Carnaval e Noite de Bar. O tema não muda as regras. Os temas
-ficam em `src/data/cardThemes.ts` e o estilo em `src/ui/styles.css` (blocos `card-theme-*`).
+## Documentação
 
-### Coringas trancados
+- [**DESENVOLVIMENTO.md**](DESENVOLVIMENTO.md): como rodar o projeto, regras do Truco adotadas, pontuação,
+  como criar Coringas, o modo online, o servidor e a publicação de versões.
+- [**DESIGN.md**](DESIGN.md): arquitetura e decisões de design.
 
-Alguns Coringas começam trancados e só entram nas lojas, nos pacotes e na Coleção depois de cumprir
-uma condição, como no Balatro (por exemplo, vender 3 Coringas numa run ou fazer uma mão de 1.000
-pontos). A Coleção mostra o cadeado e a condição. Quando uma condição é cumprida, aparece o aviso
-"Coringa desbloqueado". As condições ficam em `src/data/unlocks.ts`.
+## Tecnologias
 
-### Modo administrador
+TypeScript, React, Vite, Electron e um servidor WebSocket em Node.js. Testes com Vitest.
 
-Em **Configurações → Administrador** liga tudo: baralhos, stakes, Coringas e conquistas, e põe o
-painel do administrador no Menu (`Esc`) durante a run. Ao ligar, o jogo guarda o seu progresso;
-ao desligar, ele volta a esse progresso.
+---
 
-### Atalhos
-
-| Tecla | Ação |
-| --- | --- |
-| `1` `2` `3` | jogar a carta 1, 2 ou 3 |
-| `T` | pedir truco / aumentar (seis, nove, doze) |
-| `A` / `C` | aceitar / correr |
-| `B` | blefar com as cartas selecionadas |
-| `V` | jogar a carta selecionada virada (no modo livre: liga/desliga "virar a próxima") |
-| `Enter` | jogar a carta selecionada / continuar |
-| `H` | como funciona a pontuação |
-| `D` | ver baralho |
-| `M` | mudo |
-| `Esc` | menu / fechar |
-
-No celular: toque para selecionar, toque duas vezes para jogar, segure para ver a dica.
-
-## Regras de Truco adotadas
-
-- Baralho de 40 cartas (sem 8, 9, 10). Força crescente: **4 5 6 7 Q J K A 2 3**.
-- **Vira e manilha**: a manilha é o valor seguinte ao da vira (vira 3 → manilha 4). Na campanha, a
-  vira é uma carta do seu próprio baralho e a manilha pula os valores que não existem nele (se você não
-  tem nenhum 4, vira 3 → manilha 5, e assim por diante). Manilhas
-  vencem tudo e se desempatam pelo naipe: **Paus (Zap) > Copas > Espadas > Ouros**.
-- Melhor de 3 rodadas. Mesmo valor empata (**canga**):
-  - canga na 1ª → quem vencer a 2ª leva (se a 2ª também empatar, decide a 3ª);
-  - canga na 2ª → leva quem venceu a 1ª;
-  - canga na 3ª → leva quem venceu a 1ª;
-  - tudo empatado → mão nula, ninguém pontua.
-- **Quem abre**: o "mão" alterna a cada mão (o jogador é o mão na 1ª mão de cada Blind) e joga
-  primeiro na 1ª rodada. Quem vence uma rodada abre a próxima. **Depois de uma canga, quem abriu a
-  rodada empatada abre a seguinte.**
-- **Carta virada**: a partir da 2ª rodada dá para jogar uma carta de face para baixo. Ela não vale nada
-  (perde para qualquer carta aberta; duas viradas dão canga), mas o adversário não vê qual foi.
-- **Apostas**: Truco (3) → Seis (6) → Nove (9) → Doze (12); sem aposta a mão vale 1. Só se pede na
-  própria vez, antes de jogar a carta. Quem recebe pode aceitar, correr (o apostador leva o valor
-  anterior) ou aumentar. Quem fez a última aposta aceita não pode aumentar de novo.
-- **Mão de Onze / Mão de Ferro**: opcionais nas configurações (ligadas no modo livre, desligadas na
-  campanha). Detalhes em [DESIGN.md](DESIGN.md).
-
-Essas convenções estão cobertas em `tests/truco.test.ts`.
-
-## Pontuação (resumo)
-
-1. A **Jogada** reconhecida (Zap, Casal de Manilhas, Fechou, Pé de Mesa…) dá Fichas e Mult base.
-   Gírias sobem o nível das Jogadas.
-2. A **aposta** multiplica o Mult base: sem aposta ×1, Truco ×2, Seis ×3, Nove ×4, Doze ×6.
-3. Cada **rodada vencida** soma as Fichas da carta vencedora (4=4 … 3=13; manilha = 20 + naipe).
-4. **Coringas** disparam da esquerda para a direita.
-5. Pontos = Fichas × Mult.
-
-## Como adicionar um novo Coringa
-
-Os Coringas têm **registro automático**: todo arquivo em `src/data/jokers/` que exporte por padrão
-um Coringa (ou uma lista deles) entra no jogo, na loja, nos pacotes e na coleção. Basta criar um
-arquivo:
-
-```ts
-// src/data/jokers/garcom-do-bar.ts
-import { defineJoker } from '../../engine/jokerApi';
-
-export default defineJoker({
-  id: 'garcomDoBar',
-  name: 'Garçom do Bar',
-  rarity: 'comum',          // comum | incomum | raro | lendario (define o preço)
-  icon: '🍻',
-  color: '#ffcc33',
-  description: () => '+3 Mult para cada canga na mão.',
-  score: (ctx) => {
-    if (ctx.ties > 0) ctx.mult(3 * ctx.ties);
-  },
-});
-```
-
-Ganchos disponíveis (todos opcionais), definidos em `src/engine/jokerApi.ts`:
-
-| Gancho | Quando | Uso típico |
-| --- | --- | --- |
-| `score(ctx, self)` | depois das cartas, em ordem | `ctx.chips(n)`, `ctx.mult(n)`, `ctx.xmult(n)`, `ctx.money(n)` |
-| `scoreCard(ctx, self, round)` | depois de cada carta vencedora | efeitos por naipe/valor |
-| `retrigger(ctx, self, round)` | antes de cada carta vencedora | retorna quantas vezes a mais ela pontua |
-| `beforeScore(ctx, self)` | antes de tudo | Coringas que escalam (alterar `self.state`) |
-| `handEnd(ctx, self)` | fim de toda mão | dinheiro mesmo perdendo, contadores, `self.state.destroyed = 1` |
-| `blindStart` / `blindEnd` / `bossDefeated` | ciclo do Blind | alterar mãos, pagar no fim, escalar por Chefe |
-| `passive` | sempre | `hidesVira`, `rerollDiscount`, `firstLossFree`, `copyRight` (Boto), `allowDuplicates` (Showman: repetidos podem aparecer na loja e nos pacotes) |
-
-`ctx` traz a mão (`ctx.hand`), a Jogada (`ctx.category`), o nível da aposta (`ctx.betLevel`), as
-rodadas vencidas (`ctx.roundsWon`), cangas, manilhas jogadas e o estado da run. Use `initialState`
-para contadores próprios e mostre-os na `description(self)`.
-
-Para trancar um Coringa até uma condição, adicione uma entrada em `JOKER_UNLOCKS` (`src/data/unlocks.ts`).
-
-## Campanha em dupla
-
-No menu, **Campanha em dupla** (ou **Em dupla** na tela de nova run): a mesma campanha, com
-baralho, Coringas, Tarôs, Gírias, Mandingas, vouchers, Tags, loja, Antes, Blinds e chefes, mas
-cada mão do Blind é jogada em duplas. Você e um parceiro (escolhido na hora) contra o adversário
-do Blind e um comparsa dele.
-
-- As suas três cartas e a vira saem do seu baralho, como na campanha solo; as dos outros saem da
-  casa. O blefe troca as suas cartas.
-- Quando a sua dupla leva a mão, a pontuação é sua: a mão é vista do seu lado (em cada rodada, a
-  sua carta contra a melhor carta adversária, com o resultado da dupla) e passa pela pontuação de
-  sempre. Por isso todos os Coringas, edições, selos, níveis de Jogada e vouchers funcionam igual.
-- Os chefes valem para a mesa inteira (vira rotativa, vira escondida, canga para o adversário,
-  limite de aposta etc.).
-- Quando o adversário pede truco, quem responde pela sua dupla é você.
-- Na Mão de Onze, você vê as cartas do parceiro antes de decidir.
-
-## Jogar online
-
-No menu, **Jogar online**. Um jogador cria a sala e manda o código de 4 letras; os outros entram
-com ele. Três tipos de sala, todos até 12:
-
-- **1 contra 1**: começa quando o segundo entra.
-- **Duplas 2 contra 2**: até quatro pessoas; cada um escolhe o lugar e o anfitrião começa. Os
-  lugares vazios viram IA.
-- **Dupla contra a máquina**: você e um amigo na mesma dupla contra duas IAs.
-- **Campanha em dupla**: a campanha inteira com um amigo. Antes, Blinds e chefes são da dupla
-  (o servidor sorteia a sequência); baralho, Coringas, Tarôs, dinheiro e loja são de cada um.
-  Cada um escolhe o próprio baralho na sala e o anfitrião escolhe a stake e decide jogar ou pular
-  cada Blind (pulando, cada um ganha a própria Tag). A dupla vence o Blind quando a soma das duas
-  pontuações chega à soma das duas metas; o próximo Blind começa quando os dois saem da loja. Se
-  o parceiro sair, a IA assume o lugar dele e só a sua meta conta dali em diante. A run online
-  fica salva à parte e nunca toma o lugar da sua run solo.
-
-Quem manda na partida é o servidor (`server/`): ele valida cada jogada e manda para cada jogador
-só a própria visão da mesa, então ninguém vê as cartas dos outros (nem as próprias na Mão de
-Ferro, que é às cegas). Se a conexão cair, o jogo volta sozinho para a sala; quem ficar mais de 1
-minuto e meio fora perde por abandono no 1 contra 1, e nas duplas a IA assume o lugar.
-
-Em todas as salas tem **chat** (canto de baixo à direita, sem filtro de palavras) e dá para
-**só assistir** uma sala pelo código: quem assiste vê a mesa sem a mão de ninguém e pode
-conversar no chat. Na campanha em dupla, na loja, o botão **Dar para o parceiro** em cada Coringa
-manda o Coringa para a run do parceiro (se ele não tiver espaço, volta para você).
-
-O servidor guarda um **ranking** (vitórias no 1 contra 1 e nas duplas, Blinds e Antes da
-campanha em dupla) em `trucado-stats.json` (ou no arquivo de `TRUCADO_STATS`). Ele aparece na
-tela do online e em `GET /ranking`. Cada jogo tem um id próprio, gerado na primeira vez.
-
-Offline, **Duplas contra a máquina** no menu põe você e um parceiro da IA contra uma dupla da IA.
-
-**Testar em casa:** `npm run server` e abra duas janelas do jogo (`npm run dev` e duas abas, por
-exemplo) e ponha `ws://localhost:8787` em Configurações → Online (o padrão é o servidor
-oficial, `wss://trucado-online.onrender.com`). Na mesma rede, o outro computador usa
-`ws://IP-do-seu-PC:8787` (nas configurações do jogo, em **Online**).
-
-**Publicar o servidor (para jogar pela internet):** o repositório já tem `render.yaml`. No
-[Render](https://render.com), crie um *Blueprint* apontando para o repositório e ele sobe o
-serviço sozinho (plano grátis; ele dorme sem uso e leva alguns segundos para acordar). Depois:
-
-1. Copie o endereço do serviço (ex.: `https://trucado-online.onrender.com`) e troque `https` por
-   `wss`: `wss://trucado-online.onrender.com`.
-2. Cada jogador põe esse endereço em **Configurações → Online**, ou gere o jogo já com ele:
-   `VITE_TRUCADO_SERVER=wss://trucado-online.onrender.com npm run dist`.
-
-Qualquer hospedagem de Node.js com WebSocket serve (Fly.io, Railway, uma VPS): o build é
-`npm ci --include=dev && npm run server:build` e o início é `npm run server:start`, com a porta
-em `PORT`.
-
-## Estrutura
-
-```
-src/
-  engine/   regras puras (sem UI): cartas, RNG com seed, truco, pontuação, Blind, loja, run, modo livre,
-            duel.ts (1 contra 1 online e a visão de cada jogador), duplas.ts (truco 2 contra 2),
-            coop.ts (campanha em dupla), campaign.ts (o que a campanha online compartilha)
-  net/      protocolo e cliente do modo online
-  data/     tabelas: jokers/ (registro automático), chefes, tags, vouchers, consumíveis, pacotes,
-            decks e stakes, temas de carta, desbloqueios de Coringas, falas, balance.ts (fórmulas de meta e preços)
-  engine/migrate.ts  troca os Coringas removidos pelo correlato ao carregar uma run salva
-  ai/       IA do adversário (heurística + Monte Carlo) e IA jogadora do simulador
-  ui/       React: telas, componentes, store, animações e efeitos
-  audio/    sons sintetizados com WebAudio
-tests/      Vitest
-server/     servidor online (salas, WebSocket)
-electron/   janela do jogo (main.cjs) e ícone
-scripts/    simulate.ts
-```
-
-Arquitetura e decisões de design: [DESIGN.md](DESIGN.md).
-
-## Salvamento
-
-Run em andamento, configurações, recordes, Coringas descobertos, baralhos vencidos, conquistas e
-Coringas desbloqueados ficam salvos na pasta de dados do Trucado no computador (o `localStorage` da
-janela do jogo). Sem armazenamento disponível o
-jogo funciona, só não salva.
+<p align="center">
+  Feito com 🍺 e muito blefe.
+</p>

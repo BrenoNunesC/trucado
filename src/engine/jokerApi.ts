@@ -1,5 +1,5 @@
 // Contrato dos Coringas. Um Coringa = objeto de dados + funções de efeito.
-// Para criar um novo, veja o README ("Como adicionar um Coringa").
+// Para criar um novo, veja o DESENVOLVIMENTO.md ("Como adicionar um novo Coringa").
 
 import type { Card, Rank } from './cards';
 import type { BlindState, CategoryId, ConsumableKind, JokerInstance, Rarity, RunState } from './state';
